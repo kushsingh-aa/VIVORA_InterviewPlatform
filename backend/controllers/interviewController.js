@@ -1,44 +1,74 @@
-const pool = require("../config/db");
+const Interview = require("../models/Interview");
+const Chat = require("../models/Chat");
+const { getIsConnected, inMemoryStore } = require("../config/db");
 const gptService = require("../services/gptService");
 
-// In-memory active session store (backed by DB when available)
+// In-memory active session cache for ultra-fast conversational state
 const activeSessions = new Map();
-const sessionHistoryStore = [];
 
 /**
  * Start a new interview session
  */
 const startInterview = async (req, res) => {
     try {
-        const { track = "software", role = "Software Engineering Core", experience = "Senior", difficulty = "Senior", apiKey } = req.body;
-        const effectiveApiKey = apiKey || req.headers["x-api-key"] || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
-        const userId = req.user ? req.user.id : 1;
+        const { track = "software", role = "Software Engineering Core", difficulty = "Senior", apiKey } = req.body;
+        const effectiveApiKey = apiKey || req.headers["x-api-key"] || process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY;
+        const userId = req.user ? req.user.id : null;
+        const userEmail = req.user ? req.user.email : "candidate@vivora.ai";
+        const candidateName = req.user ? req.user.name : "Candidate";
 
         // Initialize AI session dynamically using LLM
-        const sessionState = await gptService.initSession(track, difficulty, req.user ? req.user.name : "Candidate", effectiveApiKey);
+        const sessionState = await gptService.initSession(track, difficulty, candidateName, effectiveApiKey);
         const sessionId = "session_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
 
-        activeSessions.set(sessionId, {
+        const sessionData = {
             sessionId,
             userId,
+            userEmail,
             track,
-            role,
-            experience,
+            roleTitle: sessionState.roleTitle || role,
             difficulty,
+            persona: sessionState.persona,
+            greeting: sessionState.greeting,
+            currentQuestionIndex: sessionState.currentQuestionIndex || 0,
+            totalQuestions: sessionState.totalQuestions || 4,
+            currentQuestion: sessionState.currentQuestion,
+            status: "active",
+            history: sessionState.history || [],
+            scores: [],
             apiKey: effectiveApiKey,
-            createdAt: new Date().toISOString(),
-            ...sessionState
-        });
+            createdAt: new Date()
+        };
 
-        // Record in DB if available
-        try {
-            await pool.query(
-                `INSERT INTO interviews(user_id, role, experience, difficulty)
-                 VALUES($1, $2, $3, $4) RETURNING *`,
-                [userId, role, experience, difficulty]
-            );
-        } catch (dbErr) {
-            // Safe fallback
+        // Cache in memory for quick multi-turn turnarounds
+        activeSessions.set(sessionId, sessionData);
+
+        // Save to MongoDB if connected
+        if (getIsConnected()) {
+            try {
+                const newInterviewDoc = new Interview({
+                    sessionId,
+                    userId,
+                    userEmail,
+                    track,
+                    roleTitle: sessionState.roleTitle || role,
+                    difficulty,
+                    persona: sessionState.persona,
+                    greeting: sessionState.greeting,
+                    currentQuestionIndex: 0,
+                    totalQuestions: sessionState.totalQuestions || 4,
+                    status: "active",
+                    history: sessionState.history.map(h => ({
+                        speaker: h.speaker,
+                        text: h.text,
+                        questionId: h.questionId,
+                        timestamp: new Date()
+                    }))
+                });
+                await newInterviewDoc.save();
+            } catch (mongoErr) {
+                console.warn("MongoDB Interview create warning:", mongoErr.message);
+            }
         }
 
         res.status(201).json({
@@ -72,28 +102,80 @@ const submitMessage = async (req, res) => {
         }
 
         let session = activeSessions.get(sessionId);
-        const effectiveApiKey = apiKey || req.headers["x-api-key"] || session?.apiKey || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
+        const effectiveApiKey = apiKey || req.headers["x-api-key"] || session?.apiKey || process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY;
 
         if (!session) {
-            // Create on-the-fly fallback session
-            const newSession = await gptService.initSession("software", "Senior", "Candidate", effectiveApiKey);
-            session = { sessionId, userId: req.user ? req.user.id : 1, apiKey: effectiveApiKey, ...newSession };
-            activeSessions.set(sessionId, session);
+            // Restore from MongoDB or create on-the-fly session
+            if (getIsConnected()) {
+                const doc = await Interview.findOne({ sessionId });
+                if (doc) {
+                    session = {
+                        sessionId: doc.sessionId,
+                        userId: doc.userId,
+                        userEmail: doc.userEmail,
+                        track: doc.track,
+                        roleTitle: doc.roleTitle,
+                        difficulty: doc.difficulty,
+                        persona: doc.persona,
+                        history: doc.history || [],
+                        scores: doc.scores || [],
+                        currentQuestionIndex: doc.currentQuestionIndex || 0,
+                        totalQuestions: doc.totalQuestions || 4,
+                        status: doc.status
+                    };
+                    activeSessions.set(sessionId, session);
+                }
+            }
+
+            if (!session) {
+                const newSession = await gptService.initSession("software", "Senior", "Candidate", effectiveApiKey);
+                session = { sessionId, userId: req.user ? req.user.id : null, apiKey: effectiveApiKey, ...newSession };
+                activeSessions.set(sessionId, session);
+            }
         }
 
         const result = await gptService.processCandidateAnswer(session, answerText || "", effectiveApiKey);
 
-        // If interview just completed, archive it
-        if (result.isComplete && result.report) {
-            sessionHistoryStore.unshift({
-                sessionId,
-                userId: session.userId,
-                track: session.track,
-                role: session.role || session.roleTitle,
-                difficulty: session.difficulty,
-                report: result.report,
-                createdAt: new Date().toISOString()
-            });
+        // Update in MongoDB
+        if (getIsConnected()) {
+            try {
+                await Interview.findOneAndUpdate(
+                    { sessionId },
+                    {
+                        $set: {
+                            status: result.isComplete ? "completed" : "active",
+                            currentQuestionIndex: session.currentQuestionIndex,
+                            scores: session.scores,
+                            ...(result.report ? { report: result.report } : {})
+                        },
+                        $push: {
+                            history: {
+                                $each: [
+                                    { speaker: "candidate", text: answerText, timestamp: new Date() },
+                                    { speaker: "interviewer", text: result.interviewerText, isFollowUp: result.isFollowUp, timestamp: new Date() }
+                                ]
+                            }
+                        }
+                    },
+                    { new: true, upsert: true }
+                );
+            } catch (mongoUpdateErr) {
+                console.warn("MongoDB update interview warning:", mongoUpdateErr.message);
+            }
+        } else {
+            // In-memory archive
+            if (result.isComplete && result.report) {
+                inMemoryStore.interviews.set(sessionId, {
+                    sessionId,
+                    userId: session.userId,
+                    userEmail: session.userEmail,
+                    track: session.track,
+                    role: session.roleTitle,
+                    difficulty: session.difficulty,
+                    report: result.report,
+                    createdAt: new Date()
+                });
+            }
         }
 
         res.json({
@@ -121,7 +203,7 @@ const getHint = async (req, res) => {
     try {
         const { sessionId, apiKey } = req.body;
         const session = activeSessions.get(sessionId) || {};
-        const effectiveApiKey = apiKey || req.headers["x-api-key"] || session?.apiKey || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
+        const effectiveApiKey = apiKey || req.headers["x-api-key"] || session?.apiKey || process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY;
         const hintData = await gptService.getQuestionHint(session, effectiveApiKey);
 
         res.json({
@@ -141,8 +223,25 @@ const assistantChat = async (req, res) => {
     try {
         const { sessionId, query, apiKey } = req.body;
         const session = activeSessions.get(sessionId) || {};
-        const effectiveApiKey = apiKey || req.headers["x-api-key"] || session?.apiKey || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
+        const effectiveApiKey = apiKey || req.headers["x-api-key"] || session?.apiKey || process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY;
         const copilotResponse = await gptService.askCopilotAssistant(query, session, effectiveApiKey);
+
+        // Log Chat in MongoDB
+        if (getIsConnected() && sessionId) {
+            try {
+                const chatDoc = new Chat({
+                    sessionId,
+                    userId: req.user?.id,
+                    userEmail: req.user?.email || "candidate@vivora.ai",
+                    query,
+                    reply: copilotResponse.reply,
+                    timestamp: new Date()
+                });
+                await chatDoc.save();
+            } catch (chatErr) {
+                console.warn("MongoDB Chat log error:", chatErr.message);
+            }
+        }
 
         res.json({
             success: true,
@@ -161,10 +260,9 @@ const completeInterview = async (req, res) => {
     try {
         const { sessionId, apiKey } = req.body;
         const session = activeSessions.get(sessionId);
-        const effectiveApiKey = apiKey || req.headers["x-api-key"] || session?.apiKey || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
+        const effectiveApiKey = apiKey || req.headers["x-api-key"] || session?.apiKey || process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY;
 
         if (!session) {
-            // Generate standard report
             const mockSession = await gptService.initSession("software", "Senior", "Candidate", effectiveApiKey);
             const report = await gptService.generateFinalReport(mockSession, effectiveApiKey);
             return res.json({ success: true, report });
@@ -173,15 +271,29 @@ const completeInterview = async (req, res) => {
         session.status = "completed";
         const report = await gptService.generateFinalReport(session, effectiveApiKey);
 
-        sessionHistoryStore.unshift({
-            sessionId,
-            userId: session.userId,
-            track: session.track,
-            role: session.role || session.roleTitle,
-            difficulty: session.difficulty,
-            report,
-            createdAt: new Date().toISOString()
-        });
+        // Update in MongoDB
+        if (getIsConnected()) {
+            try {
+                await Interview.findOneAndUpdate(
+                    { sessionId },
+                    { $set: { status: "completed", report } },
+                    { new: true, upsert: true }
+                );
+            } catch (err) {
+                console.warn("MongoDB complete interview update error:", err.message);
+            }
+        } else {
+            inMemoryStore.interviews.set(sessionId, {
+                sessionId,
+                userId: session.userId,
+                userEmail: session.userEmail,
+                track: session.track,
+                role: session.roleTitle,
+                difficulty: session.difficulty,
+                report,
+                createdAt: new Date()
+            });
+        }
 
         res.json({
             success: true,
@@ -200,8 +312,29 @@ const completeInterview = async (req, res) => {
  */
 const getHistory = async (req, res) => {
     try {
-        const userId = req.user ? req.user.id : 1;
-        const userHistory = sessionHistoryStore.filter(s => !s.userId || s.userId === userId || userId === 1);
+        const userEmail = req.user?.email;
+
+        // 1. Fetch from MongoDB
+        if (getIsConnected()) {
+            const query = (userEmail && userEmail !== "guest@vivora.ai") ? { userEmail } : {};
+            const interviews = await Interview.find(query).sort({ createdAt: -1 }).limit(20);
+            
+            const historyList = interviews.map(doc => ({
+                sessionId: doc.sessionId,
+                userId: doc.userId,
+                userEmail: doc.userEmail,
+                track: doc.track,
+                role: doc.roleTitle,
+                difficulty: doc.difficulty,
+                report: doc.report,
+                createdAt: doc.createdAt
+            }));
+
+            return res.json({ success: true, history: historyList });
+        }
+
+        // 2. In-Memory fallback
+        const userHistory = Array.from(inMemoryStore.interviews.values()).reverse();
         res.json({ success: true, history: userHistory });
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch history", error: err.message });

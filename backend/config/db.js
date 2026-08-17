@@ -1,91 +1,57 @@
-const { Pool } = require("pg");
+const mongoose = require("mongoose");
 
-let pool = null;
-let isConnected = false;
+let isMongoConnected = false;
 
-// Mock in-memory tables fallback
-const mockDb = {
-    users: [],
-    interviews: [],
-    reports: []
+// Resilient in-memory fallback store for offline/unconfigured environments
+const inMemoryStore = {
+    users: new Map(),
+    interviews: new Map(),
+    chats: []
 };
 
-try {
-    if (process.env.DB_HOST && process.env.DB_NAME) {
-        pool = new Pool({
-            host: process.env.DB_HOST,
-            port: process.env.DB_PORT || 5432,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
+/**
+ * Connects to MongoDB Atlas / local MongoDB cluster
+ */
+async function connectDB() {
+    const mongoUri = process.env.MONGODB_URI;
+
+    if (!mongoUri || mongoUri.includes("<db_username>")) {
+        console.log("ℹ️ MONGODB_URI is not fully configured or contains placeholders in .env. Running with resilient in-memory store.");
+        isMongoConnected = false;
+        return;
+    }
+
+    try {
+        mongoose.set("strictQuery", false);
+        await mongoose.connect(mongoUri, {
+            serverSelectionTimeoutMS: 5000,
+            connectTimeoutMS: 10000
         });
 
-        pool.connect()
-            .then(() => {
-                isConnected = true;
-                console.log("✅ PostgreSQL Connected");
-            })
-            .catch(err => {
-                console.log("ℹ️ Database connection failed, falling back to resilient in-memory mode.");
-                isConnected = false;
-            });
-    } else {
-        console.log("ℹ️ No DB configuration provided in .env, running with resilient in-memory store.");
+        isMongoConnected = true;
+        console.log("🍃 MongoDB Atlas Connected Successfully!");
+    } catch (err) {
+        console.warn(`⚠️ MongoDB Connection Error: ${err.message}. Falling back to resilient in-memory store.`);
+        isMongoConnected = false;
     }
-} catch (err) {
-    console.log("ℹ️ DB init error, using in-memory store.");
 }
 
-const safePool = {
-    query: async (text, params = []) => {
-        if (isConnected && pool) {
-            try {
-                return await pool.query(text, params);
-            } catch (err) {
-                console.warn("DB Query failed, using in-memory store fallback:", err.message);
-            }
-        }
+mongoose.connection.on("connected", () => {
+    isMongoConnected = true;
+});
 
-        const sql = text.trim().toLowerCase();
+mongoose.connection.on("error", (err) => {
+    console.warn("MongoDB connection runtime error:", err.message);
+    isMongoConnected = false;
+});
 
-        // Basic mock router for fallback operations
-        if (sql.startsWith("insert into users")) {
-            const id = mockDb.users.length + 1;
-            const newUser = { id, name: params[0], email: params[1], password: params[2], created_at: new Date() };
-            mockDb.users.push(newUser);
-            return { rows: [{ ...newUser }] };
-        }
+mongoose.connection.on("disconnected", () => {
+    console.log("MongoDB disconnected.");
+    isMongoConnected = false;
+});
 
-        if (sql.startsWith("select * from users where email =")) {
-            const user = mockDb.users.find(u => u.email === params[0]);
-            return { rows: user ? [{ ...user }] : [] };
-        }
-
-        if (sql.startsWith("select id, name, email")) {
-            const user = mockDb.users.find(u => u.id === params[0]);
-            return { rows: user ? [{ id: user.id, name: user.name, email: user.email, created_at: user.created_at }] : [] };
-        }
-
-        if (sql.startsWith("insert into interviews")) {
-            const id = 'intv_' + Date.now();
-            const newInterview = {
-                id,
-                user_id: params[0],
-                role: params[1],
-                experience: params[2],
-                difficulty: params[3],
-                created_at: new Date()
-            };
-            mockDb.interviews.push(newInterview);
-            return { rows: [{ ...newInterview }] };
-        }
-
-        if (sql.startsWith("select") && sql.includes("from interviews")) {
-            return { rows: mockDb.interviews.filter(i => i.user_id === params[0]) };
-        }
-
-        return { rows: [] };
-    }
+module.exports = {
+    connectDB,
+    getIsConnected: () => isMongoConnected,
+    inMemoryStore
 };
-
-module.exports = safePool;
