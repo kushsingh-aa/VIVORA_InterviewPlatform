@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIVORA AI Portal - Intelligent Conversational Interview Platform</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen transition-colors duration-200 bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100" id="body-root">
+
+  <!-- ==================== LOGIN / REGISTER MODULE ==================== -->
+  <div id="view-login" class="flex items-center justify-center min-h-screen p-6 bg-slate-100 dark:bg-slate-950">
+    <div class="w-full max-w-md p-8 md:p-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl space-y-6">
+      <div class="text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-2xl text-3xl mb-3 shadow-inner">
+          🤖
+        </div>
+        <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">VIVORA <span class="text-indigo-600">AI</span></h1>
+        <p class="text-slate-500 dark:text-slate-400 text-sm font-semibold mt-1">Autonomous Conversational Assessment Engine</p>
+      </div>
+
+      <div id="login-error" class="hidden bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 p-3.5 rounded-xl text-sm font-semibold"></div>
+
+      <form id="login-form" class="space-y-4" onsubmit="handleAuthSubmit(event)">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider mb-1.5 text-slate-700 dark:text-slate-300">Candidate Email</label>
+          <input type="email" id="login-email" required value="candidate@vivora.ai" placeholder="name@company.com" class="w-full p-3.5 border border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-indigo-500 font-medium text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 transition-all text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider mb-1.5 text-slate-700 dark:text-slate-300">Access Key / Password</label>
+          <div class="relative">
+            <input type="password" id="login-password" required value="password" placeholder="••••••••••••" class="w-full p-3.5 pr-16 border border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:border-indigo-500 font-medium text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 transition-all text-sm">
+            <button type="button" id="toggle-password" onclick="togglePasswordVisibility()" class="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-xs text-slate-500 hover:text-indigo-600 tracking-wider">SHOW</button>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-login-submit" class="w-full bg-indigo-600 text-white font-bold p-3.5 rounded-xl hover:bg-indigo-700 shadow-md hover:shadow-indigo-500/20 transition-all text-sm flex items-center justify-center gap-2">
+          <span>Enter Assessment Portal</span> →
+        </button>
+      </form>
+
+      <div class="relative flex items-center justify-center">
+        <div class="border-t border-slate-200 dark:border-slate-800 w-full"></div>
+        <span class="bg-white dark:bg-slate-900 px-3 text-xs font-bold text-slate-400 uppercase tracking-widest absolute">or</span>
+      </div>
+
+      <button type="button" onclick="startQuickDemoSession()" class="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-all text-sm flex items-center justify-center gap-2">
+        <span>⚡ Launch Instant Demo Mode (No Login Required)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN PLATFORM HUB ==================== -->
+  <div id="main-platform" class="hidden min-h-screen flex flex-col">
+    <!-- TOP NAVIGATION BAR -->
+    <header class="h-[72px] bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center px-6 md:px-8 sticky top-0 z-50 transition-colors duration-200">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('dashboard')">
+        <div class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-lg shadow-md shadow-indigo-500/20">
+          🤖
+        </div>
+        <div>
+          <div class="text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none">VIVORA <span class="text-indigo-600">AI</span></div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Conversational Vetting Platform</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 md:gap-4 relative">
+        <!-- Voice Synth Toggle -->
+        <button id="voice-toggle-btn" onclick="toggleVoiceOutput()" class="flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" title="Toggle AI Text-to-Speech Voice">
+          <span id="voice-icon">🔊</span>
+          <span class="hidden sm:inline" id="voice-status-text">AI Voice: ON</span>
+        </button>
+
+        <!-- Dark Mode Toggle -->
+        <button id="theme-toggle" onclick="toggleDarkMode()" class="border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 font-bold text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+          <span id="theme-icon">🌙</span>
+        </button>
+
+        <!-- Copilot Quick Toggle -->
+        <button onclick="toggleCopilotDrawer()" class="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60 rounded-xl px-3 py-1.5 font-bold text-xs hover:bg-indigo-100 transition-all flex items-center gap-1.5">
+          <span>💡</span>
+          <span class="hidden sm:inline">AI Copilot</span>
+        </button>
+
+        <!-- Profile Dropdown -->
+        <div class="relative">
+          <div onclick="toggleProfileDropdown(event)" class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 p-1.5 md:p-2 rounded-xl transition-all border border-slate-200 dark:border-slate-700">
+            <div class="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-black text-xs shadow-sm" id="user-avatar-badge">U</div>
+            <span id="user-display" class="text-xs font-bold text-slate-800 dark:text-white pr-1 hidden sm:inline">Candidate</span>
+            <span class="text-xs text-slate-400">▼</span>
+          </div>
+
+          <div id="profile-dropdown" class="hidden absolute right-0 mt-3 w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-5 z-50 space-y-4">
+            <div class="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div class="w-11 h-11 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center text-lg font-black">AI</div>
+              <div class="overflow-hidden">
+                <h4 id="profile-card-name" class="font-black text-slate-900 dark:text-white text-sm truncate">Vivora Candidate</h4>
+                <p id="profile-card-email" class="text-xs text-slate-400 font-semibold truncate">candidate@vivora.ai</p>
+              </div>
+            </div>
+            <div class="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <div class="flex justify-between"><span>Active Node:</span><span class="text-indigo-600 dark:text-indigo-400 font-bold">Conversational v2.0</span></div>
+              <div class="flex justify-between"><span>Biometric Telemetry:</span><span class="text-emerald-500 font-bold">Enabled</span></div>
+              <div class="flex justify-between"><span>Voice Synthesizer:</span><span class="text-indigo-600 dark:text-indigo-400 font-bold">WebSpeech Neural</span></div>
+            </div>
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button onclick="handleLogout()" class="w-full text-left font-bold text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 p-2.5 rounded-xl transition-colors flex items-center gap-2">
+                <span>🛑</span> End Session & Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex flex-1 relative">
+      <!-- SIDEBAR -->
+      <aside class="w-[260px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-5 flex flex-col justify-between hidden md:flex sticky top-[72px] h-[calc(100vh-72px)]">
+        <div class="flex flex-col gap-2">
+          <button onclick="switchView('dashboard')" id="nav-dashboard" class="w-full p-3 rounded-xl text-left font-bold text-xs md:text-sm bg-indigo-600 text-white flex items-center gap-2.5 transition-all">
+            <span>💼</span> Interview Chambers
+          </button>
+          <button onclick="switchView('interview')" id="nav-interview" class="hidden w-full p-3 rounded-xl text-left font-bold text-xs md:text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-all">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span>🎙️ Active Interview</span>
+          </button>
+          <button onclick="switchView('analytics')" id="nav-analytics" class="w-full p-3 rounded-xl text-left font-bold text-xs md:text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-all">
+            <span>📈</span> Historical Archive
+          </button>
+          <a href="about.html" class="w-full p-3 rounded-xl text-left font-bold text-xs md:text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-all">
+            <span>ℹ️</span> About Engine
+          </a>
+          <a href="contact.html" class="w-full p-3 rounded-xl text-left font-bold text-xs md:text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-all">
+            <span>✉️</span> Support Node
+          </a>
+          <button onclick="switchView('settings')" id="nav-settings" class="w-full p-3 rounded-xl text-left font-bold text-xs md:text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-all">
+            <span>⚙️</span> System Config
+          </button>
+        </div>
+
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">
+          <div class="font-bold text-slate-900 dark:text-white mb-1">💡 Pro Candidate Tip</div>
+          <p class="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">State your architectural assumptions out loud. The AI evaluates both depth and clarity!</p>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT AREA -->
+      <main class="flex-1 p-5 md:p-10 max-w-6xl w-full overflow-y-auto">
+        
+        <!-- ==================== VIEW 1: DASHBOARD / TRACKS ==================== -->
+        <div id="view-dashboard" class="space-y-8 animate-fadeIn">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-full text-xs font-bold mb-2">
+              <span class="w-2 h-2 rounded-full bg-indigo-500"></span> Live AI Interview Chambers
+            </div>
+            <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Select Your Evaluation Track</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">Initiate an assessment vertical channel below. The autonomous AI interviewer will conduct real-time conversational vetting with dynamic follow-ups.</p>
+          </div>
+
+          <!-- Difficulty & Experience Selector -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Target Seniority:</span>
+                <div class="flex flex-wrap gap-2" id="difficulty-pills">
+                  <button onclick="setDifficulty('Junior')" class="diff-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 transition-all" data-diff="Junior">Junior (0-2 YOE)</button>
+                  <button onclick="setDifficulty('Mid-Level')" class="diff-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 transition-all" data-diff="Mid-Level">Mid-Level (3-5 YOE)</button>
+                  <button onclick="setDifficulty('Senior')" class="diff-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm" data-diff="Senior">Senior (5-8 YOE)</button>
+                  <button onclick="setDifficulty('Staff/Lead')" class="diff-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 transition-all" data-diff="Staff/Lead">Staff / Principal (8+ YOE)</button>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                <span>⏱️ Duration: <strong>15-20 mins</strong></span>
+                <span>•</span>
+                <span>🎙️ Voice + Text Enabled</span>
+              </div>
+            </div>
+
+            <!-- Dynamic Seniority Focus Indicator -->
+            <div id="seniority-focus-card" class="p-3 bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 rounded-xl text-xs flex items-center justify-between gap-3 text-slate-700 dark:text-slate-300">
+              <div>
+                <span class="font-bold text-indigo-600 dark:text-indigo-400" id="seniority-focus-title">Senior Level (5-8 YOE):</span>
+                <span id="seniority-focus-desc" class="ml-1 text-slate-600 dark:text-slate-400">Distributed systems scalability, concurrency locking, cache stampedes, fault isolation, and latency tradeoffs.</span>
+              </div>
+              <span class="px-2 py-0.5 bg-indigo-600 text-white text-[10px] font-bold rounded-md whitespace-nowrap">Calibrated</span>
+            </div>
+          </div>
+
+          <!-- TRACK CARDS GRID -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Track 1: Software Engineering -->
+            <div onclick="startInterviewSession('software')" class="group relative bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 hover:border-indigo-600 dark:hover:border-indigo-500 rounded-2xl p-6 cursor-pointer transition-all shadow-sm hover:shadow-xl hover:-translate-y-0.5 space-y-4">
+              <div class="flex items-start justify-between">
+                <div class="w-14 h-14 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                  💻
+                </div>
+                <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-full text-xs font-bold">Core Engineering</span>
+              </div>
+              <div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">Software Engineering Core</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-xs font-medium mt-1 leading-relaxed">Distributed systems topography, database concurrency & locking, microservice resiliency patterns, and caching mechanics.</p>
+              </div>
+              <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                <span>Interviewer: Alex Rivera (Principal Architect)</span>
+                <span class="group-hover:translate-x-1 transition-transform">Start Chamber →</span>
+              </div>
+            </div>
+
+            <!-- Track 2: System Design -->
+            <div onclick="startInterviewSession('system_design')" class="group relative bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 hover:border-indigo-600 dark:hover:border-indigo-500 rounded-2xl p-6 cursor-pointer transition-all shadow-sm hover:shadow-xl hover:-translate-y-0.5 space-y-4">
+              <div class="flex items-start justify-between">
+                <div class="w-14 h-14 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                  🏗️
+                </div>
+                <span class="px-3 py-1 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-full text-xs font-bold">Large-Scale Infra</span>
+              </div>
+              <div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">System Design & Architecture</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-xs font-medium mt-1 leading-relaxed">High-throughput messaging systems, global rate limiters, WebSocket connection pooling, partition tolerance, and zero-downtime scaling.</p>
+              </div>
+              <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
+                <span>Interviewer: Dr. Marcus Chen (Chief Architect)</span>
+                <span class="group-hover:translate-x-1 transition-transform">Start Chamber →</span>
+              </div>
+            </div>
+
+            <!-- Track 3: Product Management -->
+            <div onclick="startInterviewSession('product')" class="group relative bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 hover:border-indigo-600 dark:hover:border-indigo-500 rounded-2xl p-6 cursor-pointer transition-all shadow-sm hover:shadow-xl hover:-translate-y-0.5 space-y-4">
+              <div class="flex items-start justify-between">
+                <div class="w-14 h-14 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                  📊
+                </div>
+                <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-bold">Product Strategy</span>
+              </div>
+              <div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">Product Management Lead</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-xs font-medium mt-1 leading-relaxed">Metric drop root-cause investigation, RICE/Kano prioritization trade-offs, international enterprise GTM, and user onboarding optimization.</p>
+              </div>
+              <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                <span>Interviewer: Elena Vance (VP of Product)</span>
+                <span class="group-hover:translate-x-1 transition-transform">Start Chamber →</span>
+              </div>
+            </div>
+
+            <!-- Track 4: Behavioral & Leadership -->
+            <div onclick="startInterviewSession('behavioral')" class="group relative bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 hover:border-indigo-600 dark:hover:border-indigo-500 rounded-2xl p-6 cursor-pointer transition-all shadow-sm hover:shadow-xl hover:-translate-y-0.5 space-y-4">
+              <div class="flex items-start justify-between">
+                <div class="w-14 h-14 bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                  🤝
+                </div>
+                <span class="px-3 py-1 bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400 rounded-full text-xs font-bold">Executive Presence</span>
+              </div>
+              <div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">Behavioral & Leadership Core</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-xs font-medium mt-1 leading-relaxed">Navigating executive misalignment, production crisis management, engineering culture building, and structured STAR storytelling.</p>
+              </div>
+              <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-purple-600 dark:text-purple-400">
+                <span>Interviewer: Samantha Reed (People Director)</span>
+                <span class="group-hover:translate-x-1 transition-transform">Start Chamber →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VIEW 2: ACTIVE INTERVIEW CHAMBER ==================== -->
+        <div id="view-interview" class="hidden space-y-6">
+          
+          <!-- INTERVIEW STATUS HEADER -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 md:p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+            <div id="interview-progress-bar" class="absolute top-0 left-0 h-1 bg-indigo-600 w-1/4 transition-all duration-700"></div>
+
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <div class="w-11 h-11 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl font-black shadow-md shadow-indigo-500/20" id="interviewer-avatar">
+                  🤖
+                </div>
+                <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 id="interviewer-name" class="font-black text-slate-900 dark:text-white text-base">Alex Rivera</h3>
+                  <span id="ai-status-badge" class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-md text-[10px] font-extrabold uppercase tracking-wide">Ready</span>
+                </div>
+                <p id="interviewer-role-desc" class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Principal Architect & Bar Raiser</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button onclick="repeatQuestionAudio()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 transition-all flex items-center gap-1.5">
+                <span>🔊</span> Replay Voice
+              </button>
+              <span id="session-timer" class="font-mono font-bold text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-xl border border-indigo-100 dark:border-indigo-900">19:45 remaining</span>
+              <button onclick="confirmEndInterview()" class="bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 hover:bg-red-100 border border-red-200 dark:border-red-800 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all">
+                End Chamber 🛑
+              </button>
+            </div>
+          </div>
+
+          <!-- MAIN GRID: CHAT DIALOGUE & TELEMETRY HUD -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- LEFT COLUMN: CONVERSATIONAL STREAM & INPUT (8 Cols) -->
+            <div class="lg:col-span-8 space-y-4 flex flex-col">
+              
+              <!-- CHAT DIALOGUE STREAM -->
+              <div id="chat-dialogue-stream" class="bg-slate-100/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 md:p-6 h-[460px] overflow-y-auto space-y-4 relative">
+                <!-- Dialogue items injected dynamically here -->
+              </div>
+
+              <!-- AI TYPING INDICATOR -->
+              <div id="ai-typing-indicator" class="hidden items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl w-fit text-xs font-bold text-slate-500 shadow-sm">
+                <div class="flex items-center gap-1">
+                  <div class="w-2 h-2 rounded-full bg-indigo-600 typing-dot"></div>
+                  <div class="w-2 h-2 rounded-full bg-indigo-600 typing-dot"></div>
+                  <div class="w-2 h-2 rounded-full bg-indigo-600 typing-dot"></div>
+                </div>
+                <span>Interviewer is analyzing your response...</span>
+              </div>
+
+              <!-- CANDIDATE RESPONSE INPUT MATRIX -->
+              <div class="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 focus-within:border-indigo-600 rounded-2xl p-4 md:p-5 shadow-sm space-y-3 transition-colors">
+                
+                <!-- Quick Prompt Chips -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                  <button onclick="requestHintAction()" class="whitespace-nowrap px-3 py-1 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-100 rounded-lg font-bold border border-amber-200 dark:border-amber-800/80 transition-all">💡 Ask for Hint</button>
+                  <button onclick="requestClarificationAction()" class="whitespace-nowrap px-3 py-1 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 rounded-lg font-bold border border-blue-200 dark:border-blue-800/80 transition-all">🎯 Clarify Scope</button>
+                  <button onclick="insertTemplateAction('star')" class="whitespace-nowrap px-3 py-1 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 hover:bg-purple-100 rounded-lg font-bold border border-purple-200 dark:border-purple-800/80 transition-all">📋 STAR Template</button>
+                  <button onclick="insertTemplateAction('tradeoff')" class="whitespace-nowrap px-3 py-1 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 rounded-lg font-bold border border-emerald-200 dark:border-emerald-800/80 transition-all">⚖️ Tradeoff Matrix</button>
+                </div>
+
+                <div class="relative">
+                  <textarea id="transcript-area" rows="4" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 outline-none text-slate-900 dark:text-white text-sm font-medium leading-relaxed resize-none focus:ring-2 focus:ring-indigo-500/20" placeholder="Speak aloud via the microphone or type your response here... (Take your time, speak clearly)"></textarea>
+                  
+                  <!-- Live Speech Visualizer Bar -->
+                  <div id="mic-visualizer" class="hidden absolute bottom-3 right-3 flex items-center gap-1 bg-indigo-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow-md">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping"></span>
+                    <span>LISTENING</span>
+                    <div class="flex items-center gap-0.5 h-3 ml-1">
+                      <div class="w-[2px] bg-white h-2 anim-wave"></div>
+                      <div class="w-[2px] bg-white h-3 anim-wave delay-75"></div>
+                      <div class="w-[2px] bg-white h-1 anim-wave delay-150"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Input Action Controls -->
+                <div class="flex items-center justify-between gap-3 pt-1">
+                  <div class="flex items-center gap-2">
+                    <button type="button" id="btn-toggle-mic" onclick="toggleMicrophoneRecording()" class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all">
+                      <span id="mic-icon">🎙️</span>
+                      <span id="mic-label">Record Voice</span>
+                    </button>
+                    <button type="button" onclick="clearTranscript()" class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-semibold px-2 py-1">
+                      Clear
+                    </button>
+                  </div>
+
+                  <button type="button" onclick="submitCandidateResponse()" id="btn-submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-md hover:shadow-indigo-500/25 transition-all flex items-center gap-2">
+                    <span>Submit Response</span> →
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: BIOMETRIC TELEMETRY & COPILOT DRAWER (4 Cols) -->
+            <div class="lg:col-span-4 space-y-4">
+              
+              <!-- WEBCAM & TELEMETRY HUD CARD -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Live Telemetry Feed
+                  </span>
+                  <button onclick="toggleWebcamFeed()" class="text-[11px] font-bold text-indigo-600 hover:underline">Toggle Cam</button>
+                </div>
+
+                <div class="relative w-full h-44 bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800">
+                  <video id="webcam-feed" autoplay playsinline muted class="w-full h-full object-cover scale-x-[-1]"></video>
+                  
+                  <!-- HUD Overlays -->
+                  <div id="cam-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 text-xs gap-2">
+                    <span class="text-3xl">📹</span>
+                    <span class="font-semibold">Webcam Feed Active</span>
+                  </div>
+
+                  <!-- Face Target Circle -->
+                  <div class="absolute top-1/2 left-1/2 w-28 h-28 hud-target pointer-events-none opacity-40"></div>
+
+                  <!-- Real-time HUD Badges -->
+                  <div class="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-[10px] font-mono text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">
+                    FOCUS: <span id="hud-focus-val">94%</span>
+                  </div>
+                  <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-[10px] font-mono text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/30">
+                    WPM: <span id="hud-wpm-val">128</span>
+                  </div>
+                  <div class="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-[10px] font-mono text-blue-300 px-2 py-0.5 rounded border border-blue-500/30">
+                    STRESS: <span id="hud-stress-val">LOW</span>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-center text-xs">
+                  <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-xl">
+                    <div class="text-[10px] text-slate-400 uppercase font-bold">Clarity Score</div>
+                    <div class="font-mono font-black text-indigo-600 dark:text-indigo-400 text-sm" id="hud-clarity">91%</div>
+                  </div>
+                  <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-xl">
+                    <div class="text-[10px] text-slate-400 uppercase font-bold">Pacing Index</div>
+                    <div class="font-mono font-black text-emerald-500 text-sm" id="hud-pacing">Optimal</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- VIVORA AI COPILOT CARD -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col h-[280px]">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5 mb-2.5">
+                  <div class="flex items-center gap-2">
+                    <span class="text-base">💡</span>
+                    <span class="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider">Vivora AI Copilot</span>
+                  </div>
+                  <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-full">Assistant</span>
+                </div>
+
+                <!-- Copilot Messages -->
+                <div id="copilot-stream" class="flex-1 overflow-y-auto space-y-2.5 text-xs pr-1">
+                  <div class="p-3 bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 rounded-xl text-slate-700 dark:text-slate-300 leading-relaxed">
+                    🤖 <strong>Hi Candidate!</strong> I'm your coaching companion. You can ask me for hints, clarification, or structural tips anytime!
+                  </div>
+                </div>
+
+                <!-- Copilot Input -->
+                <form onsubmit="handleCopilotSubmit(event)" class="mt-2 flex gap-1.5">
+                  <input type="text" id="copilot-input" placeholder="Ask Copilot a question..." class="flex-1 p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs outline-none focus:border-indigo-500 font-medium text-slate-900 dark:text-white">
+                  <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 rounded-xl font-bold text-xs transition-colors">
+                    Send
+                  </button>
+                </form>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ==================== VIEW 3: COMPREHENSIVE SCORECARD / COMPLETE ==================== -->
+        <div id="view-complete" class="hidden space-y-8 animate-fadeIn max-w-4xl mx-auto py-4">
+          
+          <!-- Hero Score Banner -->
+          <div class="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden border border-indigo-800/40">
+            <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+              <div class="space-y-2">
+                <span class="px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 rounded-full text-xs font-bold uppercase tracking-widest">Assessment Concluded</span>
+                <h1 class="text-3xl md:text-4xl font-black tracking-tight" id="report-role-title">Software Engineering Assessment</h1>
+                <p class="text-slate-300 text-sm max-w-lg font-medium" id="report-summary-text">Candidate demonstrated strong architectural depth and structured problem-solving.</p>
+              </div>
+
+              <div class="flex flex-col items-center justify-center p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 min-w-[170px]">
+                <div class="text-xs uppercase font-bold text-indigo-200 tracking-wider">Overall Score</div>
+                <div class="text-5xl font-black text-white my-1" id="report-overall-score">89%</div>
+                <span class="px-3 py-1 bg-emerald-500 text-white text-xs font-extrabold rounded-full shadow-sm" id="report-recommendation-badge">Strong Hire</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Multi-Metric Telemetry Grid -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-center shadow-sm">
+              <div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Technical Depth</div>
+              <div class="text-3xl font-black text-indigo-600 dark:text-indigo-400 mt-2" id="score-technical">92%</div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-center shadow-sm">
+              <div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Problem Solving</div>
+              <div class="text-3xl font-black text-blue-500 mt-2" id="score-problem">88%</div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-center shadow-sm">
+              <div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Communication</div>
+              <div class="text-3xl font-black text-emerald-500 mt-2" id="score-comm">85%</div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-center shadow-sm">
+              <div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Focus & Composure</div>
+              <div class="text-3xl font-black text-purple-500 mt-2" id="score-composure">90%</div>
+            </div>
+          </div>
+
+          <!-- Strengths & Growth Areas -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-3">
+              <div class="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+                <span>🌟</span> Key Strengths Demonstrated
+              </div>
+              <ul class="space-y-2 text-xs font-medium text-slate-600 dark:text-slate-300" id="report-strengths-list">
+                <li>• Articulated multi-tier caching and distributed locking strategies.</li>
+                <li>• Clear systematic breakdown of race conditions.</li>
+              </ul>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-3">
+              <div class="flex items-center gap-2 text-amber-600 font-bold text-sm">
+                <span>🎯</span> Recommended Growth Vectors
+              </div>
+              <ul class="space-y-2 text-xs font-medium text-slate-600 dark:text-slate-300" id="report-growth-list">
+                <li>• Quantify throughput latency numbers more explicitly.</li>
+                <li>• Mention automated CI/CD integration tests earlier in response.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Question-by-Question Breakdown -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+            <h3 class="text-lg font-black text-slate-900 dark:text-white">Question-by-Question Dialogue Audit</h3>
+            <div id="report-breakdown-list" class="space-y-4">
+              <!-- Dynamically populated question cards -->
+            </div>
+          </div>
+
+          <!-- Final Actions -->
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-4">
+            <button onclick="switchView('dashboard')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3.5 rounded-xl shadow-md transition-all text-sm">
+              ← Launch Another Interview Chamber
+            </button>
+            <div class="flex gap-3">
+              <button onclick="exportReportToTxt()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-all text-sm">
+                💾 Export Telemetry Report
+              </button>
+              <button onclick="switchView('analytics')" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-all text-sm">
+                📈 View in Archive
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==================== VIEW 4: HISTORICAL ARCHIVE ==================== -->
+        <div id="view-analytics" class="hidden space-y-6 animate-fadeIn">
+          <div>
+            <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">Session Historical Archive</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Review past candidate assessments, telemetry scores, and AI bar-raiser feedback.</p>
+          </div>
+          <div id="history-list" class="space-y-4">
+            <!-- Dynamically populated from backend / localStorage -->
+          </div>
+        </div>
+
+        <!-- ==================== VIEW 5: SETTINGS ==================== -->
+        <div id="view-settings" class="hidden space-y-6 max-w-xl animate-fadeIn">
+          <div>
+            <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">Platform System Configuration</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Configure AI voice parameters, evaluation strictness, and session durations.</p>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-5 shadow-sm">
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">🔑 Generative AI API Key (Gemini / OpenAI / Groq)</label>
+                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded">Live LLM Powered</span>
+              </div>
+              <input type="password" id="setting-api-key" placeholder="AIzaSy... (Gemini) or sk-... (OpenAI) or gsk_... (Groq)" class="w-full p-3 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 outline-none font-mono text-xs text-slate-900 dark:text-white">
+              <p class="text-[11px] text-slate-400 mt-1">Leave empty to use the server environment default or enter your personal key for unmetered live LLM reasoning.</p>
+            </div>
+
+            <div>
+              <label class="block font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Default Session Time (Seconds)</label>
+              <input type="number" id="setting-timer-val" value="1200" class="w-full p-3 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 outline-none font-medium text-slate-900 dark:text-white text-sm">
+            </div>
+
+            <div>
+              <label class="block font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">AI Interviewer Persona Strictness</label>
+              <select id="setting-strictness" class="w-full p-3 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 outline-none font-medium text-slate-900 dark:text-white text-sm">
+                <option value="balanced">Balanced Bar Raiser (Standard FAANG/Enterprise)</option>
+                <option value="rigorous">Deep-Dive Rigorous (Principal / Architect Level)</option>
+                <option value="supportive">Supportive Coach (Constructive Mentorship)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">AI Speech Synthesis Rate</label>
+              <input type="range" id="setting-speech-rate" min="0.8" max="1.3" step="0.1" value="1.0" class="w-full accent-indigo-600">
+              <div class="flex justify-between text-[11px] text-slate-400 font-semibold mt-1">
+                <span>0.8x (Measured)</span>
+                <span>1.0x (Normal)</span>
+                <span>1.3x (Brisk)</span>
+              </div>
+            </div>
+
+            <button onclick="savePlatformSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-3 rounded-xl transition-all text-sm">
+              Save Preferences ✓
+            </button>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal for viewing historical scorecard detail -->
+  <div id="modal-scorecard" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full p-6 md:p-8 max-h-[90vh] overflow-y-auto space-y-6 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="text-xl font-black text-slate-900 dark:text-white" id="modal-title">Session Scorecard Details</h3>
+        <button onclick="closeModalScorecard()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+      <div id="modal-content" class="space-y-4 text-sm">
+        <!-- Content populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

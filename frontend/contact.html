@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIVORA AI Portal - Contact</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+
+  <header class="h-[70px] bg-white border-b-2 border-slate-200 flex justify-between items-center px-8">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">🤖</span>
+      <span class="text-xl font-black">VIVORA <span class="text-indigo-600">PORTAL</span></span>
+    </div>
+    <a href="index.html" class="border-2 border-slate-200 rounded-xl px-4 py-2 font-bold text-sm hover:bg-slate-50">← Dashboard</a>
+  </header>
+
+  <div class="flex flex-1 justify-center p-10">
+    <main class="max-w-xl w-full space-y-6">
+      <div>
+        <h2 class="text-3xl font-black mb-1">Platform Assistance Matrix</h2>
+        <p class="text-slate-500 font-medium">Encountering anomalies? Dispatch an analytical support ticket node.</p>
+      </div>
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-8 shadow-sm">
+        <form id="contact-form" class="space-y-5" onsubmit="alert('✓ Ticket dispatched!'); this.reset(); return false;">
+          <div>
+            <label class="block font-bold text-sm text-slate-700 mb-1.5">Issue Category</label>
+            <select class="w-full p-3 border border-slate-300 rounded-xl bg-slate-50 outline-none font-medium text-sm text-slate-900">
+              <option>Web Speech API Audio Interruption</option>
+              <option>Webcam Capture Blocked/Not Found</option>
+              <option>FastAPI Endpoint Connectivity Dropout</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-sm text-slate-700 mb-1.5">Detailed Description</label>
+            <textarea class="w-full h-28 p-3 border border-slate-300 rounded-xl bg-slate-50 outline-none font-medium text-sm text-slate-900" placeholder="Provide details..."></textarea>
+          </div>
+          <button type="submit" class="w-full bg-indigo-600 text-white font-bold p-3.5 rounded-xl hover:bg-indigo-700 transition-colors">Dispatch Support Node</button>
+        </form>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
