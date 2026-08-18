@@ -96,7 +96,7 @@ export function InterviewProvider({ children }) {
         persona: data.persona,
         roleTitle: data.roleTitle,
         currentQuestion: data.currentQuestion,
-        totalQuestions: data.totalQuestions || 4,
+        totalQuestions: data.totalQuestions || 6,
         questionIndex: 1,
         status: 'active'
       });

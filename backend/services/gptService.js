@@ -172,22 +172,22 @@ const PERSONAS = {
     software: {
         roleTitle: "Software Engineer",
         persona: "Alex Rivera (Principal Architect & Bar Raiser)",
-        greeting: "Welcome to your Software Engineering technical evaluation. I'm Alex. We'll explore problem solving, practical implementation, and system resilience. Feel free to reason out loud. Ready?"
+        greeting: "Welcome! I'm Alex. Let's dive straight into your technical evaluation."
     },
     system_design: {
         roleTitle: "Systems Architect",
         persona: "Dr. Marcus Chen (Chief Infrastructure Architect)",
-        greeting: "Greetings. I'm Marcus. Today we will design large-scale, fault-tolerant infrastructure tailored to your target seniority. Let's build something robust."
+        greeting: "Hello, I'm Dr. Chen. Let's design scalable, resilient infrastructure."
     },
     product: {
         roleTitle: "Product Manager",
         persona: "Elena Vance (VP of Product)",
-        greeting: "Hi there! I'm Elena, VP of Product. In this interview, we'll dive into product strategy, metric-driven decision making, and navigating tough product trade-offs. Let's get started!"
+        greeting: "Hi, I'm Elena. Let's explore your product strategy and execution."
     },
     behavioral: {
         roleTitle: "Engineering Leader",
-        persona: "Samantha Reed (Director of People & Organizational Excellence)",
-        greeting: "Hello and welcome! I'm Samantha. Today we'll explore your collaborative experiences, leadership under pressure, and how you navigate complex interpersonal dynamics using the STAR framework."
+        persona: "Samantha Reed (Director of People & Organization)",
+        greeting: "Hello, I'm Samantha. Let's dive into your leadership and team execution."
     }
 };
 
@@ -204,19 +204,14 @@ const gptService = {
 TARGET SENIORITY LEVEL: "${difficulty}" (${archetype.title})
 SENIORITY SCOPE: ${archetype.scope}
 INTERVIEWER TONE: ${archetype.tone}
-FOCUS THEMES: ${archetype.sampleQuestionTheme}
 
-YOUR TASK:
-Generate an opening question that PERFECTLY MATCHES the "${difficulty}" seniority level.
-- If Junior: Ask about fundamental coding mechanics, basic API design, basic SQL, or step-by-step logic. Do NOT ask planetary distributed systems.
-- If Mid-Level: Ask about production-ready microservices, database query indexing, caching, background workers, and modular design.
-- If Senior: Ask about high-throughput distributed systems, concurrency locking, cache stampedes, circuit breakers, and fault tolerance.
-- If Staff/Lead: Ask about multi-region active-active architectures, zero-downtime database sharding, consensus algorithms, and macro technical strategy.
+CRITICAL QUESTION CONSTRAINT:
+The opening question MUST be ULTRA SHORT, CRISP, AND DIRECT (1 to 2 sentences maximum, under 25 words). Never generate long paragraphs. Get straight to the technical problem.
 
 Respond in JSON format:
 {
-  "greeting": "Personal greeting acknowledging their ${difficulty} level track",
-  "openingQuestion": "Detailed scenario-based question calibrated precisely for ${difficulty} level",
+  "greeting": "Short 1-sentence greeting",
+  "openingQuestion": "Ultra short 1-2 sentence scenario question under 25 words",
   "topic": "Brief topic title"
 }`;
 
@@ -232,26 +227,26 @@ Respond in JSON format:
             apiKeyOverride: apiKey
         });
 
-        if (!generated || !generated.openingQuestion) {
+        if (!generated || !generated.openingQuestion || generated.openingQuestion.length > 200) {
             let fallbackQ = "";
             let fallbackTopic = "";
 
             if (difficulty === "Junior") {
                 fallbackTopic = "API Design & Input Validation";
-                fallbackQ = "Let's start with API development. Imagine you need to build a user registration endpoint that accepts user details, validates email and password constraints, hashes the password, and stores it in PostgreSQL. How would you structure this endpoint, handle validation errors, and ensure sensitive data is protected?";
+                fallbackQ = "How would you design a secure user registration API that validates input and safely hashes passwords in PostgreSQL?";
             } else if (difficulty === "Mid-Level") {
                 fallbackTopic = "Database Indexing & Caching";
-                fallbackQ = "Imagine your e-commerce product catalog search query starts taking 1.5 seconds under 2,000 concurrent requests. How would you analyze the slow query, add database indexing, and implement a caching layer using Redis with appropriate TTL and eviction policies?";
+                fallbackQ = "Your product query takes 1.5 seconds under 2,000 QPS. How do you index and cache it with Redis?";
             } else if (difficulty === "Staff/Lead") {
-                fallbackTopic = "Planetary Multi-Region Active-Active Architecture";
-                fallbackQ = "Design a multi-region active-active transaction ledger handling 100,000 write operations per second across 3 continents with under 50ms latency. How do you resolve cross-datacenter replication conflicts, handle split-brain partitions, and ensure regulatory data residency compliance?";
+                fallbackTopic = "Planetary Multi-Region Architecture";
+                fallbackQ = "How do you resolve cross-datacenter write conflicts in an active-active multi-region transaction ledger?";
             } else {
-                fallbackTopic = "Distributed Systems & Scalability";
-                fallbackQ = "Imagine your service experiences sudden 10x traffic spikes during flash sales, causing database CPU to hit 99% and request latency to spike from 20ms to 4000ms. How would you systematically diagnose the bottleneck, mitigate it immediately, and architect a long-term resilient topology?";
+                fallbackTopic = "Idempotency & Concurrency";
+                fallbackQ = "How do you guarantee idempotency and avoid double-charges in a payment service during a 10x flash sale?";
             }
 
             generated = {
-                greeting: `${personaInfo.greeting} We will be evaluating at the **${difficulty} Level** (${archetype.title}).`,
+                greeting: `${personaInfo.greeting} Evaluating at **${difficulty} Level**.`,
                 openingQuestion: fallbackQ,
                 topic: fallbackTopic
             };
@@ -263,7 +258,7 @@ Respond in JSON format:
             question: generated.openingQuestion
         };
 
-        const initialInterviewerText = `${generated.greeting}\n\n**Question 1 [${difficulty} Level - ${firstQuestionObj.topic}]:**\n${firstQuestionObj.question}`;
+        const initialInterviewerText = `${generated.greeting}\n\n**Question 1 [${difficulty} - ${firstQuestionObj.topic}]:**\n${firstQuestionObj.question}`;
 
         return {
             track,
@@ -272,7 +267,7 @@ Respond in JSON format:
             persona: personaInfo.persona,
             greeting: generated.greeting,
             currentQuestionIndex: 0,
-            totalQuestions: 4,
+            totalQuestions: 6,
             currentQuestion: firstQuestionObj,
             status: "active",
             history: [
@@ -296,7 +291,7 @@ Respond in JSON format:
         const personaInfo = PERSONAS[track] || PERSONAS.software;
         const archetype = SENIORITY_ARCHETYPES[difficulty] || SENIORITY_ARCHETYPES.Senior;
         const currentIndex = sessionState.currentQuestionIndex || 0;
-        const totalQuestions = sessionState.totalQuestions || 4;
+        const totalQuestions = sessionState.totalQuestions || 6;
 
         // Record candidate answer in history
         sessionState.history.push({
@@ -313,8 +308,8 @@ Respond in JSON format:
 
         if (isTrivial) {
             const feedbackMsg = trimmed.includes("hello") || trimmed.includes("hi") || trimmed.includes("hey")
-                ? `Hello! However, this is a technical assessment chamber. Please provide your architectural and engineering approach to the question asked above.`
-                : `Your response does not address the technical scenario. Please explain how you would solve the technical problem described above.`;
+                ? `Hello! Please address the technical question asked.`
+                : `Please explain how you would solve the technical problem described above.`;
 
             const nonAnswerEval = {
                 isOffTopic: true,
@@ -325,12 +320,12 @@ Respond in JSON format:
                 composure: 70,
                 feedback: "No technical answer provided. Response was off-topic or a greeting.",
                 highlights: [],
-                critiques: ["Did not attempt to address the technical scenario. Please provide concrete technical reasoning."]
+                critiques: ["Did not attempt to address the technical scenario."]
             };
 
             sessionState.scores.push(nonAnswerEval);
 
-            const followUpInterviewerText = `${feedbackMsg}\n\n**Re-prompt [${difficulty} Level]:**\n${sessionState.currentQuestion?.question || "Please explain your technical approach to the scenario above."}`;
+            const followUpInterviewerText = `${feedbackMsg}\n\n**Re-prompt [${difficulty}]:**\n${sessionState.currentQuestion?.question || "Please explain your technical approach to the scenario above."}`;
 
             sessionState.history.push({
                 speaker: "interviewer",
@@ -358,28 +353,19 @@ CALIBRATION GUIDELINES FOR ${difficulty} LEVEL:
 - Interviewer Tone: ${archetype.tone}
 - Evaluation Rubric: ${archetype.evalCriteria}
 
-CRITICAL ACCURACY & OFF-TOPIC RULES:
-1. If the candidate's answer is off-topic, evasive, jokes, gibberish, or fails to address the technical question, set "isOffTopic": true and score "overallScore": 0, "technicalDepth": 0, "problemSolving": 0, "communication": 0. DO NOT award any unearned accuracy or clarity percentage.
-2. If "isOffTopic" is true, do not advance to a new topic; set "isFollowUp": true and redirect the candidate to focus on the scenario.
-3. Only if the candidate genuinely attempts to answer the technical question: set "isOffTopic": false and score honestly (1-100):
-   - Shallow/partial without tradeoffs: 50-68
-   - Solid, conceptually correct with clear mechanisms: 75-88
-   - Comprehensive senior-tier mastery with failure modes and concurrency: 89-98
-4. Evaluate across:
-   - overallScore: holistic mark relative to ${difficulty} expectations (0 if off-topic)
-   - technicalDepth: depth relative to ${difficulty} expectations (0 if off-topic)
-   - problemSolving: systematic breakdown and reasoning (0 if off-topic)
-   - communication: clarity, conciseness, structured delivery (0 if off-topic)
-   - composure: confidence and handling of complexity
-5. Identify specific strengths (highlights) and areas to improve (critiques).
+CRITICAL RULES FOR QUESTIONS & EVALUATION:
+1. QUESTION LENGTH CONSTRAINT: Keep "interviewerFeedback" to 1 short sentence. Keep "nextQuestion" ULTRA SHORT, CRISP, AND PUNCHY (1 to 2 sentences maximum, under 25 words). Never output wordy paragraphs.
+2. If the candidate's answer is off-topic or evasive, set "isOffTopic": true, score 0 across all metrics, and redirect with "isFollowUp": true.
+3. If genuine technical response, set "isOffTopic": false, score 1-100 based on technical merit.
+4. Total questions in this interview is ${totalQuestions}. When currentIndex reaches ${totalQuestions - 1} without probe, set "isComplete": true.
 
 Respond in JSON format:
 {
-  "interviewerFeedback": "Short direct reaction acknowledging what they said",
+  "interviewerFeedback": "Short 1-sentence reaction",
   "isFollowUp": true/false,
   "isOffTopic": true/false,
-  "nextQuestion": "The follow-up or next technical question calibrated for ${difficulty} level (empty if complete)",
-  "nextTopic": "Topic title for the next question",
+  "nextQuestion": "Ultra short 1-2 sentence question under 25 words (empty if complete)",
+  "nextTopic": "Topic title",
   "isComplete": true/false,
   "evaluation": {
     "isOffTopic": true/false,
@@ -388,7 +374,7 @@ Respond in JSON format:
     "problemSolving": 84,
     "communication": 86,
     "composure": 88,
-    "feedback": "Concise summary feedback for candidate",
+    "feedback": "1-sentence summary feedback",
     "highlights": ["Strength 1", "Strength 2"],
     "critiques": ["Area to improve 1"]
   }
