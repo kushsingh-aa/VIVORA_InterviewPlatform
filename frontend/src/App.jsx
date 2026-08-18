@@ -10,6 +10,7 @@ import ScorecardView from './views/ScorecardView';
 import HistoryView from './views/HistoryView';
 import SettingsView from './views/SettingsView';
 import SupportView from './views/SupportView';
+import AboutView from './views/AboutView';
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -50,7 +51,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 dark:bg-[#070b14] dark:text-slate-100 transition-colors duration-200">
       
       {/* Top Navbar */}
       <Navbar currentView={currentView} setCurrentView={setCurrentView} />
@@ -81,6 +82,10 @@ export default function App() {
 
           {currentView === 'support' && (
             <SupportView />
+          )}
+
+          {currentView === 'about' && (
+            <AboutView onStartAssessment={() => setCurrentView('dashboard')} />
           )}
 
           {currentView === 'settings' && (
