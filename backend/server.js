@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 const { connectDB } = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
@@ -15,8 +16,11 @@ app.use(express.json());
 // Initialize MongoDB connection
 connectDB();
 
-// Serve static frontend files
-const frontendPath = path.join(__dirname, "../frontend");
+// Determine static frontend path (prioritize compiled React build in dist/)
+const distPath = path.join(__dirname, "../frontend/dist");
+const fallbackPath = path.join(__dirname, "../frontend");
+const frontendPath = fs.existsSync(distPath) ? distPath : fallbackPath;
+
 app.use(express.static(frontendPath));
 
 // API health check
@@ -36,7 +40,10 @@ app.use("/interview", interviewRoutes);
 // Fallback to index.html for direct SPA routing in Express 5
 app.use((req, res, next) => {
     if (req.method === "GET" && !req.path.startsWith("/auth") && !req.path.startsWith("/interview") && !req.path.startsWith("/api")) {
-        return res.sendFile(path.join(frontendPath, "index.html"));
+        const indexPath = path.join(frontendPath, "index.html");
+        if (fs.existsSync(indexPath)) {
+            return res.sendFile(indexPath);
+        }
     }
     next();
 });
@@ -45,5 +52,5 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`🚀 Vivora Server running on http://localhost:${PORT}`);
-    console.log(`📡 Frontend served at http://localhost:${PORT}`);
+    console.log(`📡 Frontend (React App) served at http://localhost:${PORT}`);
 });
