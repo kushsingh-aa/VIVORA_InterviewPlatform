@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useInterview } from '../../context/InterviewContext';
-import { Activity, Sparkles, CheckCircle2, AlertTriangle, Zap } from 'lucide-react';
+import { Activity, Sparkles, CheckCircle2, AlertTriangle, Zap, HelpCircle } from 'lucide-react';
 
 export default function ChatStream() {
   const { history, isAiThinking, activeSession } = useInterview();
@@ -57,9 +57,14 @@ export default function ChatStream() {
                   {msg.text}
                 </div>
 
-                {/* Dynamic Clarity AI & Accuracy Tag */}
+                {/* Accuracy & Clarity AI Status (Omitted for Off-Topic Responses) */}
                 <div className="flex items-center justify-end gap-2 text-[10px] font-mono">
-                  {msg.clarityScore ? (
+                  {msg.isOffTopic ? (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-rose-950/40 border border-rose-900/60 rounded-full text-rose-300">
+                      <AlertTriangle size={11} className="text-rose-400" />
+                      <span className="font-bold">⚠️ Off-Topic / Non-Answer</span>
+                    </div>
+                  ) : msg.clarityScore !== null && msg.clarityScore !== undefined ? (
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#0c1426] border border-[#1a284a] rounded-full">
                       {msg.clarityScore >= 80 ? (
                         <CheckCircle2 size={11} className="text-emerald-400" />
@@ -79,7 +84,7 @@ export default function ChatStream() {
                   ) : (
                     <div className="inline-flex items-center gap-1 text-slate-500 animate-pulse">
                       <Sparkles size={11} className="text-purple-400" />
-                      <span>Clarity AI Evaluating...</span>
+                      <span>Evaluating Response...</span>
                     </div>
                   )}
                 </div>

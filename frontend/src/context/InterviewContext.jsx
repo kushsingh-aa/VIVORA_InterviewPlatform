@@ -170,27 +170,34 @@ export function InterviewProvider({ children }) {
 
       // Compute dynamic clarity & accuracy status based on real LLM evaluation
       const evalData = data.evaluation || {};
-      const clarity = evalData.communication !== undefined ? evalData.communication : (evalData.overallScore || 0);
-      const techDepth = evalData.technicalDepth !== undefined ? evalData.technicalDepth : 0;
-      const probSolving = evalData.problemSolving !== undefined ? evalData.problemSolving : 0;
-      const overall = evalData.overallScore !== undefined ? evalData.overallScore : 0;
+      const isOffTopic = evalData.isOffTopic === true || evalData.overallScore === 0 || data.isOffTopic === true;
+      const clarity = isOffTopic ? null : (evalData.communication || evalData.overallScore || 0);
+      const techDepth = isOffTopic ? 0 : (evalData.technicalDepth || 0);
+      const probSolving = isOffTopic ? 0 : (evalData.problemSolving || 0);
+      const overall = isOffTopic ? 0 : (evalData.overallScore || 0);
 
-      let accuracyLabel = '✓ Crisp & Accurate';
-      if (overall === 0) accuracyLabel = '❌ Off-Topic / Non-Answer (0%)';
-      else if (overall >= 90) accuracyLabel = `🎯 Highly Crisp & Optimal (${overall}%)`;
-      else if (overall >= 80) accuracyLabel = `💡 Solid Conceptual Match (${overall}%)`;
-      else if (overall >= 70) accuracyLabel = `⚡ Good Reasoning (${overall}%)`;
-      else if (overall >= 50) accuracyLabel = `⚠️ Needs Concrete Specifics (${overall}%)`;
-      else accuracyLabel = `⚠️ Incomplete / Ambiguous (${overall}%)`;
+      let accuracyLabel = null;
+      if (isOffTopic) {
+        accuracyLabel = '⚠️ Off-Topic Response';
+      } else if (overall >= 90) {
+        accuracyLabel = `🎯 Highly Crisp & Optimal (${overall}%)`;
+      } else if (overall >= 80) {
+        accuracyLabel = `💡 Solid Conceptual Match (${overall}%)`;
+      } else if (overall >= 70) {
+        accuracyLabel = `⚡ Good Reasoning (${overall}%)`;
+      } else {
+        accuracyLabel = `⚠️ Needs Concrete Specifics (${overall}%)`;
+      }
 
       // Update live telemetry HUD state with REAL LLM scores
       setLiveEvaluation({
-        clarityScore: clarity,
+        isOffTopic,
+        clarityScore: isOffTopic ? null : clarity,
         technicalDepth: techDepth,
         problemSolving: probSolving,
         wpm: computedWpm,
-        accuracyStatus: accuracyLabel,
-        latestHighlights: evalData.highlights?.length > 0 ? evalData.highlights : ['No technical concepts detected'],
+        accuracyStatus: isOffTopic ? '⚠️ Off-Topic / Awaiting Technical Answer' : accuracyLabel,
+        latestHighlights: isOffTopic ? ['No technical concepts detected'] : (evalData.highlights?.length > 0 ? evalData.highlights : ['Systematic reasoning']),
         latestCritiques: evalData.critiques || []
       });
 
@@ -206,6 +213,7 @@ export function InterviewProvider({ children }) {
         speaker: 'interviewer',
         text: data.interviewerText,
         isFollowUp: data.isFollowUp,
+        isOffTopic: isOffTopic,
         evaluation: evalData,
         timestamp: new Date().toISOString()
       };
@@ -218,7 +226,8 @@ export function InterviewProvider({ children }) {
           if (next[i].speaker === 'candidate') {
             next[i] = {
               ...next[i],
-              clarityScore: clarity,
+              isOffTopic,
+              clarityScore: isOffTopic ? null : clarity,
               accuracyLabel: accuracyLabel,
               evaluation: evalData
             };

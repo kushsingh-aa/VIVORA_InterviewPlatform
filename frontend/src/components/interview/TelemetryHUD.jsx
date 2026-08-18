@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, Languages, Target, CheckCircle2, ShieldCheck, Zap, Activity } from 'lucide-react';
+import { MessageSquare, Languages, Target, CheckCircle2, ShieldCheck, Zap, Activity, AlertTriangle } from 'lucide-react';
 import { useTelemetry } from '../../hooks/useTelemetry';
 import { useInterview } from '../../context/InterviewContext';
 
@@ -8,10 +8,11 @@ export default function TelemetryHUD() {
   const { liveEvaluation, isAiThinking } = useInterview();
 
   const wpm = liveEvaluation.wpm || 138;
-  const clarity = liveEvaluation.clarityScore || 90;
-  const techDepth = liveEvaluation.technicalDepth || 88;
-  const accuracyStatus = liveEvaluation.accuracyStatus || 'Awaiting response';
-  const highlight = liveEvaluation.latestHighlights?.[0] || 'Technical breakdown in progress';
+  const isOffTopic = liveEvaluation.isOffTopic;
+  const clarity = isOffTopic ? null : (liveEvaluation.clarityScore || 90);
+  const techDepth = isOffTopic ? 0 : (liveEvaluation.technicalDepth || 88);
+  const accuracyStatus = isOffTopic ? '⚠️ Off-Topic Response' : (liveEvaluation.accuracyStatus || 'Awaiting response');
+  const highlight = isOffTopic ? 'Please provide architectural reasoning' : (liveEvaluation.latestHighlights?.[0] || 'Technical breakdown in progress');
 
   return (
     <div className="space-y-4">
@@ -98,7 +99,7 @@ export default function TelemetryHUD() {
           </span>
         </div>
 
-        {/* Card 2: REAL VOCAB & CLARITY AI RING */}
+        {/* Card 2: REAL VOCAB & CLARITY AI RING (Omitted on Off-Topic) */}
         <div className="bg-[#0b1324] border border-[#17233f] rounded-2xl p-4 flex flex-col justify-between space-y-2 shadow-md">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-[10px] font-bold tracking-widest uppercase text-purple-300">
@@ -107,17 +108,23 @@ export default function TelemetryHUD() {
             <Languages size={13} className="text-slate-400" />
           </div>
 
-          {/* Real Circular Percentage Gauge */}
+          {/* Real Circular Gauge */}
           <div className="flex items-center justify-center py-1">
-            <div className="relative w-12 h-12 rounded-full border-4 border-[#16223e] border-t-purple-400 border-r-purple-500 flex items-center justify-center">
-              <span className="text-xs font-bold text-slate-200">
-                {clarity}%
+            <div className={`relative w-12 h-12 rounded-full border-4 ${
+              isOffTopic ? 'border-rose-900/60 border-t-rose-500' : 'border-[#16223e] border-t-purple-400 border-r-purple-500'
+            } flex items-center justify-center`}>
+              <span className={`text-xs font-bold ${isOffTopic ? 'text-rose-400' : 'text-slate-200'}`}>
+                {isOffTopic ? '--' : `${clarity}%`}
               </span>
             </div>
           </div>
 
-          <div className="bg-[#121a2f] border border-[#192748] text-purple-300 text-center py-0.5 rounded-lg text-[9px] font-bold truncate">
-            {clarity >= 88 ? 'Highly Articulate' : clarity >= 75 ? 'Clear Delivery' : 'Needs Structure'}
+          <div className={`border text-center py-0.5 rounded-lg text-[9px] font-bold truncate ${
+            isOffTopic
+              ? 'bg-rose-950/40 border-rose-900/60 text-rose-300'
+              : 'bg-[#121a2f] border-[#192748] text-purple-300'
+          }`}>
+            {isOffTopic ? 'Off-Topic Response' : clarity >= 88 ? 'Highly Articulate' : clarity >= 75 ? 'Clear Delivery' : 'Needs Structure'}
           </div>
         </div>
 
@@ -135,7 +142,7 @@ export default function TelemetryHUD() {
               {techDepth} / 100
             </span>
 
-            {/* Real depth slider bar */}
+            {/* Depth slider bar */}
             <div className="w-full bg-[#16223e] rounded-full h-1.5 overflow-hidden">
               <div 
                 className="h-1.5 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-300 transition-all duration-500"
@@ -144,7 +151,7 @@ export default function TelemetryHUD() {
             </div>
 
             <div className="flex justify-between text-[8px] text-slate-400">
-              <span>Foundational</span>
+              <span>{isOffTopic ? 'Off-Topic' : 'Foundational'}</span>
               <span className="text-indigo-300 font-bold">Senior Scope</span>
             </div>
           </div>
@@ -153,19 +160,23 @@ export default function TelemetryHUD() {
         {/* Card 4: REAL VALIDATED HIGHLIGHT / ACCURACY */}
         <div className="bg-[#0b1324] border border-[#17233f] rounded-2xl p-4 flex flex-col justify-between space-y-2 shadow-md">
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-[10px] font-bold tracking-widest uppercase text-emerald-400">
+            <span className={`text-[10px] font-bold tracking-widest uppercase ${isOffTopic ? 'text-rose-400' : 'text-emerald-400'}`}>
               ANSWER ACCURACY
             </span>
-            <CheckCircle2 size={13} className="text-emerald-400" />
+            {isOffTopic ? <AlertTriangle size={13} className="text-rose-400" /> : <CheckCircle2 size={13} className="text-emerald-400" />}
           </div>
 
           <div className="space-y-1 py-0.5">
-            <div className="p-1.5 bg-[#0e192f] border border-[#1a2d52] rounded-xl text-[10px] text-slate-200 leading-snug line-clamp-2">
+            <div className={`p-1.5 rounded-xl text-[10px] leading-snug line-clamp-2 ${
+              isOffTopic
+                ? 'bg-rose-950/30 border border-rose-900/50 text-rose-200'
+                : 'bg-[#0e192f] border border-[#1a2d52] text-slate-200'
+            }`}>
               {isAiThinking ? 'Evaluating response...' : highlight}
             </div>
           </div>
 
-          <span className="text-[9px] text-emerald-400 font-medium truncate block">
+          <span className={`text-[9px] font-medium truncate block ${isOffTopic ? 'text-rose-400' : 'text-emerald-400'}`}>
             {accuracyStatus}
           </span>
         </div>

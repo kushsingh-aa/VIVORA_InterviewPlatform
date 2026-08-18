@@ -298,10 +298,18 @@ Respond in JSON format:
         const currentIndex = sessionState.currentQuestionIndex || 0;
         const totalQuestions = sessionState.totalQuestions || 4;
 
+        // Record candidate answer in history
+        sessionState.history.push({
+            speaker: "candidate",
+            text: answerText,
+            questionId: sessionState.currentQuestion?.id || `q_${Date.now()}`,
+            timestamp: new Date().toISOString()
+        });
+
         // Pre-check for trivial greetings, non-answers, or evasive responses
         const trimmed = (answerText || "").trim().toLowerCase();
-        const trivialGreetings = ["hello", "hi", "hey", "good morning", "good evening", "good afternoon", "hola", "yo", "sup", "test", "testing", "asdf", "idk", "i don't know", "i dont know", "no idea", "pass", "skip", "n/a", "none"];
-        const isTrivial = trivialGreetings.includes(trimmed) || (trimmed.split(/\s+/).length <= 2 && !trimmed.includes("cache") && !trimmed.includes("sql") && !trimmed.includes("api") && !trimmed.includes("db") && !trimmed.includes("redis") && !trimmed.includes("lock"));
+        const trivialGreetings = ["hello", "hi", "hey", "good morning", "good evening", "good afternoon", "hola", "yo", "sup", "test", "testing", "asdf", "idk", "i don't know", "i dont know", "no idea", "pass", "skip", "n/a", "none", "ok", "okay", "thanks", "thank you", "bye", "goodbye"];
+        const isTrivial = trivialGreetings.includes(trimmed) || (trimmed.split(/\s+/).length <= 2 && !trimmed.includes("cache") && !trimmed.includes("sql") && !trimmed.includes("api") && !trimmed.includes("db") && !trimmed.includes("redis") && !trimmed.includes("lock") && !trimmed.includes("kafka") && !trimmed.includes("queue"));
 
         if (isTrivial) {
             const feedbackMsg = trimmed.includes("hello") || trimmed.includes("hi") || trimmed.includes("hey")
@@ -309,6 +317,7 @@ Respond in JSON format:
                 : `Your response does not address the technical scenario. Please explain how you would solve the technical problem described above.`;
 
             const nonAnswerEval = {
+                isOffTopic: true,
                 overallScore: 0,
                 technicalDepth: 0,
                 problemSolving: 0,
@@ -316,7 +325,7 @@ Respond in JSON format:
                 composure: 70,
                 feedback: "No technical answer provided. Response was off-topic or a greeting.",
                 highlights: [],
-                critiques: ["Did not attempt to address the technical scenario.", "Please provide concrete architectural or engineering reasoning."]
+                critiques: ["Did not attempt to address the technical scenario. Please provide concrete technical reasoning."]
             };
 
             sessionState.scores.push(nonAnswerEval);
@@ -333,6 +342,7 @@ Respond in JSON format:
             return {
                 isComplete: false,
                 isFollowUp: true,
+                isOffTopic: true,
                 interviewerText: followUpInterviewerText,
                 evaluation: nonAnswerEval,
                 questionIndex: currentIndex + 1,
@@ -348,31 +358,31 @@ CALIBRATION GUIDELINES FOR ${difficulty} LEVEL:
 - Interviewer Tone: ${archetype.tone}
 - Evaluation Rubric: ${archetype.evalCriteria}
 
-CRITICAL SCORING RULES:
-1. If the candidate's answer is incorrect, off-topic, evasive, or lacking technical substance, score overallScore: 0-25, technicalDepth: 0-20.
-2. If the candidate gives a shallow/surface-level answer lacking tradeoffs, score overallScore: 50-65.
-3. If the candidate gives a solid, conceptually accurate answer with clear tools/mechanics, score overallScore: 75-88.
-4. If the candidate gives an exceptional, comprehensive answer covering failure modes, concurrency, and architecture, score overallScore: 89-98.
-5. Score across (0-100):
-   - overallScore: holistic mark relative to ${difficulty} expectations
-   - technicalDepth: depth relative to ${difficulty} expectations
-   - problemSolving: systematic breakdown and reasoning
-   - communication: clarity, conciseness, structured delivery
+CRITICAL ACCURACY & OFF-TOPIC RULES:
+1. If the candidate's answer is off-topic, evasive, jokes, gibberish, or fails to address the technical question, set "isOffTopic": true and score "overallScore": 0, "technicalDepth": 0, "problemSolving": 0, "communication": 0. DO NOT award any unearned accuracy or clarity percentage.
+2. If "isOffTopic" is true, do not advance to a new topic; set "isFollowUp": true and redirect the candidate to focus on the scenario.
+3. Only if the candidate genuinely attempts to answer the technical question: set "isOffTopic": false and score honestly (1-100):
+   - Shallow/partial without tradeoffs: 50-68
+   - Solid, conceptually correct with clear mechanisms: 75-88
+   - Comprehensive senior-tier mastery with failure modes and concurrency: 89-98
+4. Evaluate across:
+   - overallScore: holistic mark relative to ${difficulty} expectations (0 if off-topic)
+   - technicalDepth: depth relative to ${difficulty} expectations (0 if off-topic)
+   - problemSolving: systematic breakdown and reasoning (0 if off-topic)
+   - communication: clarity, conciseness, structured delivery (0 if off-topic)
    - composure: confidence and handling of complexity
-6. Identify specific strengths (highlights) and areas to improve (critiques).
-7. Formulate the interviewer's next response:
-   - Give 1-2 sentences of realistic interviewer feedback acknowledging their answer.
-   - DYNAMICALLY PROBE DEEPER into what they said or ASK THE NEXT QUESTION matching the ${difficulty} seniority level.
-   - If total questions (${totalQuestions}) have been completed, set isComplete: true.
+5. Identify specific strengths (highlights) and areas to improve (critiques).
 
 Respond in JSON format:
 {
   "interviewerFeedback": "Short direct reaction acknowledging what they said",
   "isFollowUp": true/false,
+  "isOffTopic": true/false,
   "nextQuestion": "The follow-up or next technical question calibrated for ${difficulty} level (empty if complete)",
   "nextTopic": "Topic title for the next question",
   "isComplete": true/false,
   "evaluation": {
+    "isOffTopic": true/false,
     "overallScore": 85,
     "technicalDepth": 88,
     "problemSolving": 84,
@@ -407,15 +417,18 @@ Respond in JSON format:
             let question = lines.slice(1).join("\n") || raw;
 
             const wordCount = answerText.split(/\s+/).length;
-            const score = wordCount < 5 ? 0 : Math.min(95, Math.max(20, Math.round(55 + (wordCount * 0.3))));
+            const isOff = wordCount < 4;
+            const score = isOff ? 0 : Math.min(95, Math.max(20, Math.round(55 + (wordCount * 0.3))));
 
             result = {
                 interviewerFeedback: feedback,
                 isFollowUp,
+                isOffTopic: isOff,
                 nextQuestion: question,
                 nextTopic: isFollowUp ? `Deep-Dive Probe` : "Technical Focus",
                 isComplete: false,
                 evaluation: {
+                    isOffTopic: isOff,
                     overallScore: score,
                     technicalDepth: Math.max(0, score),
                     problemSolving: Math.max(0, score),
@@ -430,7 +443,8 @@ Respond in JSON format:
 
         if (!result || !result.evaluation) {
             const wordCount = answerText.split(/\s+/).length;
-            const score = wordCount < 5 ? 0 : Math.min(90, Math.max(25, Math.round(50 + (wordCount * 0.3))));
+            const isOff = wordCount < 4;
+            const score = isOff ? 0 : Math.min(90, Math.max(25, Math.round(50 + (wordCount * 0.3))));
             const isFollowUp = !sessionState.inFollowUp && currentIndex < totalQuestions - 1;
             sessionState.inFollowUp = isFollowUp;
 
@@ -445,10 +459,12 @@ Respond in JSON format:
             result = {
                 interviewerFeedback: score > 70 ? "Good technical breakdown." : "Please expand further on your solution mechanics.",
                 isFollowUp,
+                isOffTopic: isOff,
                 nextQuestion: followUpText,
                 nextTopic: isFollowUp ? "Deep-Dive Verification" : "Data Architecture",
                 isComplete: currentIndex >= totalQuestions - 1 && !isFollowUp,
                 evaluation: {
+                    isOffTopic: isOff,
                     overallScore: score,
                     technicalDepth: score,
                     problemSolving: score,
