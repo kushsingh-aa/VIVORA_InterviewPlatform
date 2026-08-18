@@ -61,7 +61,7 @@ const interviewSchema = new mongoose.Schema({
     },
     difficulty: {
         type: String,
-        enum: ["Junior", "Mid-Level", "Senior", "Staff/Lead"],
+        enum: ["Junior", "Mid-Level", "Senior", "Staff/Lead", "Principal"],
         default: "Senior"
     },
     persona: {
