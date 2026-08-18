@@ -1,4 +1,7 @@
 const axios = require("axios");
+const https = require("https");
+
+const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
 /**
  * Universal LLM caller supporting OpenRouter, OpenAI, Google Gemini, and Groq
@@ -33,6 +36,7 @@ async function callLLM({ systemPrompt, messages, temperature = 0.7, jsonMode = f
                     "X-Title": "Vivora AI Assessment Portal",
                     "Content-Type": "application/json"
                 },
+                httpsAgent,
                 timeout: 25000
             });
 
