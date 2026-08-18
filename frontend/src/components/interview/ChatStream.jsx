@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useInterview } from '../../context/InterviewContext';
-import { Activity } from 'lucide-react';
+import { Activity, Sparkles, CheckCircle2, AlertTriangle, Zap } from 'lucide-react';
 
 export default function ChatStream() {
   const { history, isAiThinking, activeSession } = useInterview();
@@ -37,6 +37,11 @@ export default function ChatStream() {
                   <div className="flex items-center gap-2 font-mono text-xs">
                     <span className="font-bold text-slate-200">{personaName}</span>
                     <span className="text-[10px] text-slate-500">{timeStr}</span>
+                    {msg.isFollowUp && (
+                      <span className="px-2 py-0.2 bg-purple-950/60 border border-purple-800 text-purple-300 text-[9px] font-bold rounded">
+                        PROBE
+                      </span>
+                    )}
                   </div>
 
                   {/* Bubble */}
@@ -46,16 +51,37 @@ export default function ChatStream() {
                 </div>
               </div>
             ) : (
-              /* Candidate Message Structure */
+              /* Candidate Message Structure with Real-Time Dynamic Clarity AI */
               <div className="max-w-xl space-y-1.5">
                 <div className="bg-[#101a2f] border border-[#1c2d52] rounded-2xl rounded-tr-sm p-4 text-xs sm:text-sm text-slate-200 leading-relaxed font-normal shadow-md">
                   {msg.text}
                 </div>
 
-                {/* Sub-telemetry clarity marker */}
-                <div className="flex items-center justify-end gap-1.5 text-[10px] font-mono text-slate-500">
-                  <Activity size={11} className="text-cyan-400" />
-                  <span>Clarity: 92%</span>
+                {/* Dynamic Clarity AI & Accuracy Tag */}
+                <div className="flex items-center justify-end gap-2 text-[10px] font-mono">
+                  {msg.clarityScore ? (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#0c1426] border border-[#1a284a] rounded-full">
+                      {msg.clarityScore >= 80 ? (
+                        <CheckCircle2 size={11} className="text-emerald-400" />
+                      ) : msg.clarityScore >= 65 ? (
+                        <Zap size={11} className="text-purple-400" />
+                      ) : (
+                        <AlertTriangle size={11} className="text-amber-400" />
+                      )}
+                      <span className={`font-bold ${
+                        msg.clarityScore >= 80 ? 'text-emerald-300' : msg.clarityScore >= 65 ? 'text-purple-300' : 'text-amber-300'
+                      }`}>
+                        {msg.accuracyLabel || `Clarity: ${msg.clarityScore}%`}
+                      </span>
+                      <span className="text-slate-500">•</span>
+                      <span className="text-cyan-400 font-bold">{msg.wpm || 135} WPM</span>
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center gap-1 text-slate-500 animate-pulse">
+                      <Sparkles size={11} className="text-purple-400" />
+                      <span>Clarity AI Evaluating...</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
