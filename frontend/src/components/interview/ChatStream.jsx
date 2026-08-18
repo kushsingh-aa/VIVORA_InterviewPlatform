@@ -37,11 +37,6 @@ export default function ChatStream() {
                   <div className="flex items-center gap-2 font-mono text-xs">
                     <span className="font-bold text-slate-200">{personaName}</span>
                     <span className="text-[10px] text-slate-500">{timeStr}</span>
-                    {msg.isFollowUp && (
-                      <span className="px-2 py-0.2 bg-purple-950/60 border border-purple-800 text-purple-300 text-[9px] font-bold rounded">
-                        PROBE
-                      </span>
-                    )}
                   </div>
 
                   {/* Bubble */}

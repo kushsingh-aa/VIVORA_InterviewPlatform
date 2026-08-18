@@ -258,7 +258,7 @@ Respond in JSON format:
             question: generated.openingQuestion
         };
 
-        const initialInterviewerText = `${generated.greeting}\n\n**Question 1 [${difficulty} - ${firstQuestionObj.topic}]:**\n${firstQuestionObj.question}`;
+        const initialInterviewerText = `${generated.greeting} ${firstQuestionObj.question}`;
 
         return {
             track,
@@ -308,8 +308,8 @@ Respond in JSON format:
 
         if (isTrivial) {
             const feedbackMsg = trimmed.includes("hello") || trimmed.includes("hi") || trimmed.includes("hey")
-                ? `Hello! Please address the technical question asked.`
-                : `Please explain how you would solve the technical problem described above.`;
+                ? `Hello! Let's focus on the technical problem at hand.`
+                : `Let's make sure we address the core technical challenge.`;
 
             const nonAnswerEval = {
                 isOffTopic: true,
@@ -325,7 +325,7 @@ Respond in JSON format:
 
             sessionState.scores.push(nonAnswerEval);
 
-            const followUpInterviewerText = `${feedbackMsg}\n\n**Re-prompt [${difficulty}]:**\n${sessionState.currentQuestion?.question || "Please explain your technical approach to the scenario above."}`;
+            const followUpInterviewerText = `${feedbackMsg} ${sessionState.currentQuestion?.question || "How would you solve this technical scenario?"}`;
 
             sessionState.history.push({
                 speaker: "interviewer",
@@ -345,26 +345,23 @@ Respond in JSON format:
             };
         }
 
-        const systemPrompt = `You are ${personaInfo.persona}, conducting a live ${archetype.title} interview for a ${sessionState.roleTitle} candidate.
-Review the full conversation history and the candidate's latest response.
+        const systemPrompt = `You are ${personaInfo.persona}, conducting a live professional technical interview for a ${sessionState.roleTitle} candidate.
+Review the conversation history and the candidate's latest response.
 
-CALIBRATION GUIDELINES FOR ${difficulty} LEVEL:
-- Target Scope: ${archetype.scope}
-- Interviewer Tone: ${archetype.tone}
-- Evaluation Rubric: ${archetype.evalCriteria}
-
-CRITICAL RULES FOR QUESTIONS & EVALUATION:
-1. QUESTION LENGTH CONSTRAINT: Keep "interviewerFeedback" to 1 short sentence. Keep "nextQuestion" ULTRA SHORT, CRISP, AND PUNCHY (1 to 2 sentences maximum, under 25 words). Never output wordy paragraphs.
-2. If the candidate's answer is off-topic or evasive, set "isOffTopic": true, score 0 across all metrics, and redirect with "isFollowUp": true.
-3. If genuine technical response, set "isOffTopic": false, score 1-100 based on technical merit.
-4. Total questions in this interview is ${totalQuestions}. When currentIndex reaches ${totalQuestions - 1} without probe, set "isComplete": true.
+YOUR INSTRUCTIONS:
+1. Act as a natural, professional human interviewer. DO NOT use meta-tags like "Question X", "[Senior Level]", "[Follow-up]", or genre labels.
+2. Provide a natural 1-sentence response acknowledging their answer, followed immediately by your next question or deeper inquiry in natural conversational English.
+3. Keep each question ultra short and crisp (1-2 sentences maximum, under 25 words).
+4. If the candidate is off-topic, set "isOffTopic": true, score 0 across all metrics, and redirect them naturally.
+5. If genuine technical response, set "isOffTopic": false, score 1-100 based on technical merit.
+6. Total interview length is ${totalQuestions} questions. When completing turn ${totalQuestions - 1}, set "isComplete": true.
 
 Respond in JSON format:
 {
-  "interviewerFeedback": "Short 1-sentence reaction",
+  "interviewerFeedback": "Natural 1-sentence reaction (e.g. 'Good point on using Redis for distributed locking.')",
   "isFollowUp": true/false,
   "isOffTopic": true/false,
-  "nextQuestion": "Ultra short 1-2 sentence question under 25 words (empty if complete)",
+  "nextQuestion": "Natural 1-2 sentence technical question under 25 words (e.g. 'How do you handle node failover if the primary cache goes down?')",
   "nextTopic": "Topic title",
   "isComplete": true/false,
   "evaluation": {
@@ -400,7 +397,7 @@ Respond in JSON format:
             const isFollowUp = raw.toLowerCase().includes("follow-up") || raw.toLowerCase().includes("probe") || raw.toLowerCase().includes("deep-dive");
             
             let feedback = lines[0] || "Good breakdown of your approach.";
-            let question = lines.slice(1).join("\n") || raw;
+            let question = lines.slice(1).join(" ") || raw;
 
             const wordCount = answerText.split(/\s+/).length;
             const isOff = wordCount < 4;
@@ -411,7 +408,7 @@ Respond in JSON format:
                 isFollowUp,
                 isOffTopic: isOff,
                 nextQuestion: question,
-                nextTopic: isFollowUp ? `Deep-Dive Probe` : "Technical Focus",
+                nextTopic: "Technical Focus",
                 isComplete: false,
                 evaluation: {
                     isOffTopic: isOff,
@@ -434,20 +431,16 @@ Respond in JSON format:
             const isFollowUp = !sessionState.inFollowUp && currentIndex < totalQuestions - 1;
             sessionState.inFollowUp = isFollowUp;
 
-            let followUpText = "";
-            if (isFollowUp) {
-                followUpText = `How would you test this solution for failure modes and verify that it performs within acceptable latency bounds?`;
-            } else {
-                followUpText = `Let's move to data architecture and consistency. How would you design your storage schema and indexing strategy for this workflow?`;
-                sessionState.currentQuestionIndex = currentIndex + 1;
-            }
+            let followUpText = isFollowUp
+                ? `How would you test this solution for unexpected failure modes?`
+                : `How would you structure your database indexing for this workload?`;
 
             result = {
-                interviewerFeedback: score > 70 ? "Good technical breakdown." : "Please expand further on your solution mechanics.",
+                interviewerFeedback: score > 70 ? "Good technical breakdown." : "Let's explore the mechanics further.",
                 isFollowUp,
                 isOffTopic: isOff,
                 nextQuestion: followUpText,
-                nextTopic: isFollowUp ? "Deep-Dive Verification" : "Data Architecture",
+                nextTopic: "Data Architecture",
                 isComplete: currentIndex >= totalQuestions - 1 && !isFollowUp,
                 evaluation: {
                     isOffTopic: isOff,
@@ -469,7 +462,7 @@ Respond in JSON format:
         if (result.isComplete) {
             sessionState.status = "completed";
             const report = await gptService.generateFinalReport(sessionState, apiKey);
-            const concludingMsg = `${result.interviewerFeedback}\n\n🎉 **Interview Concluded!** You've completed all assessment chamber verticals at the **${difficulty}** level. I am compiling your final technical telemetry and performance scorecard now.`;
+            const concludingMsg = `${result.interviewerFeedback || "Great work throughout this session."}\n\n🎉 That concludes our interview! I've compiled your technical telemetry and evaluation scorecard.`;
 
             sessionState.history.push({
                 speaker: "interviewer",
@@ -486,14 +479,17 @@ Respond in JSON format:
             };
         }
 
-        // Construct interviewer message
-        const questionLabel = result.isFollowUp ? `🔍 [${difficulty} Follow-up]` : `📌 Question ${(sessionState.currentQuestionIndex || 0) + 1} [${difficulty} Level - ${result.nextTopic || 'Engineering'}]`;
-        const fullInterviewerText = `${result.interviewerFeedback}\n\n**${questionLabel}:**\n${result.nextQuestion}`;
+        // Construct 100% natural interviewer message without mechanical prefixes
+        const cleanFeedback = (result.interviewerFeedback || "").trim();
+        const cleanNextQ = (result.nextQuestion || "").trim();
+        const fullInterviewerText = cleanFeedback && cleanNextQ
+            ? `${cleanFeedback} ${cleanNextQ}`
+            : (cleanNextQ || cleanFeedback || "How would you design this system?");
 
         sessionState.currentQuestion = {
             id: `q_${Date.now()}`,
             topic: result.nextTopic || "Technical Problem",
-            question: result.nextQuestion
+            question: cleanNextQ
         };
 
         if (!result.isFollowUp) {
