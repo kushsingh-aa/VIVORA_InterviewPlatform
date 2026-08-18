@@ -1,38 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VIVORA AI Portal - About</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <link rel="stylesheet" href="style.css">
+  <title>VIVORA AI Portal - Architecture & Frameworks</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white">
   
-  <header class="h-[70px] bg-white border-b-2 border-slate-200 flex justify-between items-center px-8">
+  <!-- Header -->
+  <header class="h-16 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 flex justify-between items-center px-6 md:px-10 sticky top-0 z-50">
     <div class="flex items-center gap-3">
-      <span class="text-2xl">🤖</span>
-      <span class="text-xl font-black">VIVORA <span class="text-indigo-600">PORTAL</span></span>
+      <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center font-black text-xl text-white shadow-lg shadow-indigo-500/25">
+        🤖
+      </div>
+      <div>
+        <div class="flex items-center gap-1.5">
+          <span class="font-black text-lg text-white">VIVORA</span>
+          <span class="bg-indigo-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded">AI</span>
+        </div>
+        <p className="text-[10px] text-slate-400 font-bold uppercase">Architecture Frameworks</p>
+      </div>
     </div>
-    <a href="index.html" class="border-2 border-slate-200 rounded-xl px-4 py-2 font-bold text-sm hover:bg-slate-50">← Dashboard</a>
+    <a href="/" class="border border-slate-700 bg-slate-800/80 hover:bg-indigo-600 hover:text-white rounded-xl px-4 py-2 font-bold text-xs transition-all shadow-sm">
+      ← Return to Portal
+    </a>
   </header>
 
-  <div class="flex flex-1 justify-center p-10">
-    <main class="max-w-3xl w-full space-y-6">
-      <div>
-        <h2 class="text-3xl font-black mb-1">About VIVORA AI Engine</h2>
-        <p class="text-slate-500 font-medium">Next-generation conversational vetting frameworks.</p>
+  <!-- Main Content -->
+  <div class="flex flex-1 justify-center items-center p-6 md:p-12 relative overflow-hidden">
+    
+    <!-- Glow Backdrop -->
+    <div class="absolute -right-20 -top-20 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -left-20 -bottom-20 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+    <main class="max-w-3xl w-full space-y-6 relative z-10">
+      <div class="space-y-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/30 rounded-full text-xs font-bold text-indigo-300">
+          <span>⚡ Deep Conversational Multi-Turn LLM Stack</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-black text-white tracking-tight">About VIVORA AI Engine</h2>
+        <p class="text-slate-400 text-xs md:text-sm font-medium">Next-generation autonomous conversational vetting and real-time rubric telemetry.</p>
       </div>
-      <div class="bg-white border-2 border-slate-200 rounded-2xl p-8 space-y-6 shadow-sm">
-        <p class="font-medium leading-relaxed text-slate-600">VIVORA evaluates professional competency profiles without rigid multi-choice filters or hardcoded scripts. Our deep conversational stack operates like a living dialogue, formulating dynamic follow-ups based directly on your architectural and engineering reasoning.</p>
+
+      <div class="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 space-y-6 shadow-2xl">
+        <p class="font-normal leading-relaxed text-slate-300 text-sm">
+          VIVORA evaluates professional competency profiles without rigid multiple-choice filters or hardcoded scripts. Our deep conversational stack operates like an authentic interview dialogue, formulating dynamic follow-ups based directly on your architectural and engineering reasoning.
+        </p>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          <div class="p-5 bg-slate-50 border border-slate-100 rounded-xl">
-            <h4 class="font-black text-slate-900 mb-1">🧠 Conversational Core</h4>
-            <p class="text-xs text-slate-500 font-medium leading-relaxed">No fixed arrays. Answers run straight into custom LLM context loops to construct targeted, situational logic inquiries.</p>
+          <div class="p-5 bg-slate-800/60 border border-slate-700/80 rounded-2xl space-y-2">
+            <h4 class="font-black text-sm text-indigo-400 flex items-center gap-2">
+              <span>🧠 Conversational Intelligence</span>
+            </h4>
+            <p class="text-xs text-slate-400 font-medium leading-relaxed">
+              No static templates. Answers are processed live through calibrated LLM archetypes to construct targeted, situational logic and tradeoff probes.
+            </p>
           </div>
-          <div class="p-5 bg-slate-50 border border-slate-100 rounded-xl">
-            <h4 class="font-black text-slate-900 mb-1">👁️ Behavioral Baselines</h4>
-            <p class="text-xs text-slate-500 font-medium leading-relaxed">Optional automated visual processing tracks frame-by-frame attention markers to provide clear delivery summaries.</p>
+
+          <div class="p-5 bg-slate-800/60 border border-slate-700/80 rounded-2xl space-y-2">
+            <h4 class="font-black text-sm text-emerald-400 flex items-center gap-2">
+              <span>👁️ Biometric Telemetry HUD</span>
+            </h4>
+            <p class="text-xs text-slate-400 font-medium leading-relaxed">
+              Real-time video and audio analysis models cadence, clarity, and composure metrics to furnish an executive candidate evaluation.
+            </p>
           </div>
         </div>
       </div>

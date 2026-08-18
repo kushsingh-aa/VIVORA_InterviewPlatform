@@ -1,38 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useInterview } from '../context/InterviewContext';
-import { Award, CheckCircle2, TrendingUp, Download, ArrowLeft, ShieldCheck, Sparkles } from 'lucide-react';
+import { Award, CheckCircle2, TrendingUp, Download, ArrowLeft, ShieldCheck, Sparkles, Star, ChevronDown, ChevronUp, Cpu } from 'lucide-react';
 
 export default function ScorecardView({ onBackToDashboard }) {
   const { finalReport, activeSession } = useInterview();
+  const [expandedIndex, setExpandedIndex] = useState(null);
 
   const report = finalReport || {
     roleTitle: activeSession?.roleTitle || 'Senior Software Engineer',
-    overallScore: 82,
+    overallScore: 84,
     recommendation: 'Strong Hire',
-    executiveSummary: 'Candidate demonstrated solid reasoning calibrated for the target seniority level, communicating tradeoffs clearly and responding to deep-dive follow-ups systematically.',
+    executiveSummary: 'Candidate demonstrated exemplary architectural problem breakdown, clearly articulating distributed caching, concurrency locking, and failure isolation strategies calibrated for senior-tier scope.',
     metrics: {
-      technicalDepth: 84,
+      technicalDepth: 86,
       problemSolving: 85,
       communication: 82,
       composure: 88,
       focalAttention: 94,
-      stressIndex: 26
+      stressIndex: 24
     },
     keyStrengths: [
-      'Articulated distributed caching and concurrency locking mechanisms clearly.',
-      'Structured problem breakdown with attention to fault tolerance.',
-      'High composure and clear technical delivery throughout the session.'
+      'Articulated distributed caching (cache-aside) and Redlock concurrency locking mechanisms clearly.',
+      'Structured problem breakdown with defensive fault-tolerant architecture.',
+      'Maintained consistent eye contact and high composure under probing follow-up questions.'
     ],
     areasForGrowth: [
-      'Can quantify latency bottlenecks and network throughput limits more explicitly.',
-      'Deepen explanations of automated rollback strategies during continuous deployment.'
+      'Quantify latency thresholds and network throughput limits more explicitly.',
+      'Incorporate canary rollback strategies during distributed database schema migrations.'
     ],
     questionBreakdown: [
       {
         questionNumber: 1,
-        candidateAnswer: 'I would implement a Redis caching layer with cache-aside pattern and distributed locking.',
-        score: 84,
-        feedback: 'Good grasp of architectural patterns with clear communication.'
+        candidateAnswer: 'I would implement a Redis caching layer with cache-aside pattern and distributed locking to mitigate stampedes.',
+        score: 86,
+        feedback: 'Superb grasp of concurrency and distributed caching failure modes with clear communication.'
       }
     ]
   };
@@ -90,116 +91,162 @@ Critique: ${q.feedback}
     URL.revokeObjectURL(url);
   };
 
+  const recommendationColor = 
+    report.recommendation === 'Strong Hire' ? 'from-emerald-500 to-teal-600 text-white' :
+    report.recommendation === 'Hire' ? 'from-indigo-600 to-blue-600 text-white' :
+    report.recommendation === 'Leaning Hire' ? 'from-amber-500 to-orange-600 text-white' : 'from-rose-500 to-red-600 text-white';
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300 pb-12">
       
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
-        <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
-          <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-bold text-indigo-200">
+      {/* Executive Hero Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 border border-white/10 p-8 md:p-10 shadow-2xl text-white">
+        
+        {/* Glow backdrop */}
+        <div className="absolute -right-20 -top-20 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-8">
+          <div className="space-y-3 max-w-xl">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-white/10 border border-white/15 backdrop-blur-md rounded-full text-xs font-black tracking-wider uppercase text-indigo-300">
               <Award size={14} className="text-amber-400" />
-              <span>Assessment Completed</span>
+              <span>Assessment Completed & Verified</span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight">
-              {report.roleTitle || 'Candidate'} Scorecard
-            </h2>
-            <p className="text-xs md:text-sm text-slate-300 font-medium leading-relaxed">
+
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
+              {report.roleTitle || 'Candidate'} Evaluation
+            </h1>
+
+            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
               {report.executiveSummary}
             </p>
+
+            <div className="pt-1 flex items-center gap-2 text-xs text-slate-400 font-semibold">
+              <Sparkles size={14} className="text-amber-400" />
+              <span>Evaluated by Vivora Autonomous Multimodal Engine</span>
+            </div>
           </div>
 
-          {/* Overall Score Circle */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 text-center min-w-[150px]">
-            <span className="block text-[11px] font-bold uppercase tracking-wider text-indigo-200">Overall Score</span>
-            <span className="font-mono font-black text-4xl text-white">{report.overallScore}%</span>
-            <span className="inline-block mt-2 px-3 py-1 bg-emerald-500 text-white text-xs font-black rounded-full uppercase tracking-wider shadow-sm">
-              {report.recommendation || 'Hire'}
+          {/* Glowing Radial Overall Score Badge */}
+          <div className="bg-white/5 border border-white/15 backdrop-blur-xl rounded-3xl p-6 text-center min-w-[180px] shadow-2xl space-y-2">
+            <span className="block text-[11px] font-black uppercase tracking-widest text-indigo-300">
+              Overall Calibrated Score
             </span>
+            <div className="font-mono font-black text-5xl bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
+              {report.overallScore}%
+            </div>
+            <div className={`inline-block px-4 py-1.5 bg-gradient-to-r ${recommendationColor} text-xs font-black rounded-full uppercase tracking-wider shadow-lg`}>
+              {report.recommendation || 'Hire'}
+            </div>
           </div>
         </div>
-
-        {/* Ambient Glow */}
-        <div className="absolute right-0 top-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
       </div>
 
-      {/* 4-Metric Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* 4 Core Telemetry Metric Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Technical Depth', score: report.metrics?.technicalDepth || 80, color: 'text-indigo-600 dark:text-indigo-400' },
-          { label: 'Problem Solving', score: report.metrics?.problemSolving || 80, color: 'text-emerald-600 dark:text-emerald-400' },
-          { label: 'Communication', score: report.metrics?.communication || 80, color: 'text-purple-600 dark:text-purple-400' },
-          { label: 'Composure', score: report.metrics?.composure || 85, color: 'text-amber-600 dark:text-amber-400' },
+          { label: 'Technical Depth', score: report.metrics?.technicalDepth || 84, color: 'from-indigo-500 to-purple-600', textColor: 'text-indigo-600 dark:text-indigo-400' },
+          { label: 'Problem Solving', score: report.metrics?.problemSolving || 85, color: 'from-emerald-500 to-teal-600', textColor: 'text-emerald-600 dark:text-emerald-400' },
+          { label: 'Communication', score: report.metrics?.communication || 82, color: 'from-purple-500 to-pink-600', textColor: 'text-purple-600 dark:text-purple-400' },
+          { label: 'Composure & Pace', score: report.metrics?.composure || 88, color: 'from-amber-500 to-orange-600', textColor: 'text-amber-600 dark:text-amber-400' },
         ].map((item, idx) => (
-          <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-center shadow-sm">
-            <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider">{item.label}</span>
-            <span className={`font-mono font-black text-3xl ${item.color} mt-1 block`}>{item.score}%</span>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-3 overflow-hidden">
-              <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: `${item.score}%` }} />
+          <div 
+            key={idx} 
+            className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-6 text-center shadow-sm space-y-2"
+          >
+            <span className="block text-xs font-black uppercase tracking-wider text-slate-400">
+              {item.label}
+            </span>
+            <span className={`font-mono font-black text-3xl ${item.textColor} block`}>
+              {item.score}%
+            </span>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden shadow-inner">
+              <div 
+                className={`bg-gradient-to-r ${item.color} h-2 rounded-full transition-all duration-500`}
+                style={{ width: `${item.score}%` }} 
+              />
             </div>
           </div>
         ))}
       </div>
 
       {/* Strengths & Growth Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* Key Strengths */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm">
-          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
-            <CheckCircle2 size={18} />
-            <span>Validated Core Strengths</span>
+        {/* Core Strengths */}
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-7 space-y-5 shadow-sm">
+          <div className="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400 font-black text-sm uppercase tracking-wider">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <CheckCircle2 size={18} />
+            </div>
+            <span>Validated Strengths</span>
           </div>
-          <ul className="space-y-2 text-xs font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
+
+          <div className="space-y-3">
             {(report.keyStrengths || []).map((s, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <span className="text-emerald-500 font-bold">•</span>
+              <div key={idx} className="flex items-start gap-3 p-3.5 bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 rounded-2xl text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-1.5"></span>
                 <span>{s}</span>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
 
         {/* Growth Areas */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm">
-          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-sm">
-            <TrendingUp size={18} />
-            <span>Targeted Areas for Growth</span>
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-7 space-y-5 shadow-sm">
+          <div className="flex items-center gap-2.5 text-amber-600 dark:text-amber-400 font-black text-sm uppercase tracking-wider">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center">
+              <TrendingUp size={18} />
+            </div>
+            <span>Targeted Growth Areas</span>
           </div>
-          <ul className="space-y-2 text-xs font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
+
+          <div className="space-y-3">
             {(report.areasForGrowth || []).map((g, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <span className="text-amber-500 font-bold">•</span>
+              <div key={idx} className="flex items-start gap-3 p-3.5 bg-amber-50/50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 rounded-2xl text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed">
+                <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 mt-1.5"></span>
                 <span>{g}</span>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
 
       </div>
 
       {/* Question Breakdown List */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm">
-        <h3 className="font-black text-base text-slate-900 dark:text-white">
-          Dialogue & Response Breakdown
-        </h3>
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-7 space-y-5 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-black text-lg text-slate-900 dark:text-white">
+              Dialogue & Critique Telemetry
+            </h3>
+            <p className="text-xs text-slate-400">Detailed question-by-question candidate responses and AI interviewer analysis.</p>
+          </div>
+        </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {(report.questionBreakdown || []).map((q, idx) => (
-            <div key={idx} className="p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                  Response #{q.questionNumber || idx + 1}
+            <div 
+              key={idx} 
+              className="p-5 bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 rounded-2xl space-y-3 transition-all"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                  Probe #{q.questionNumber || idx + 1}
                 </span>
-                <span className="px-2.5 py-0.5 bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold text-xs rounded-md">
+                <span className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-mono font-bold text-xs rounded-xl">
                   Score: {q.score}%
                 </span>
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 italic">
+
+              <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed">
                 "{q.candidateAnswer}"
-              </p>
-              <div className="text-xs text-slate-700 dark:text-slate-200 font-semibold pt-1 border-t border-slate-200 dark:border-slate-700">
-                💡 <strong>Interviewer Critique:</strong> {q.feedback}
+              </div>
+
+              <div className="p-3.5 bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 rounded-xl text-xs text-slate-800 dark:text-slate-200 font-semibold space-y-1">
+                <span className="font-black text-indigo-600 dark:text-indigo-400 block">
+                  🤖 Interviewer Critique & Recommendation:
+                </span>
+                <p className="leading-relaxed font-normal">{q.feedback}</p>
               </div>
             </div>
           ))}
@@ -210,7 +257,7 @@ Critique: ${q.feedback}
       <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
         <button
           onClick={onBackToDashboard}
-          className="flex items-center gap-2 px-5 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-200 transition-all shadow-sm"
+          className="flex items-center gap-2 px-6 py-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-bold text-xs md:text-sm text-slate-800 dark:text-slate-200 transition-all shadow-sm"
         >
           <ArrowLeft size={16} />
           <span>Return to Dashboard</span>
@@ -218,7 +265,7 @@ Critique: ${q.feedback}
 
         <button
           onClick={handleExportTxt}
-          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs md:text-sm transition-all shadow-md shadow-indigo-500/20"
+          className="flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl font-bold text-xs md:text-sm transition-all shadow-lg shadow-indigo-500/25 active:scale-95"
         >
           <Download size={16} />
           <span>Download Telemetry Report (.txt)</span>

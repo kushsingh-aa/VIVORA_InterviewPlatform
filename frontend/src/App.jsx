@@ -9,6 +9,7 @@ import InterviewView from './views/InterviewView';
 import ScorecardView from './views/ScorecardView';
 import HistoryView from './views/HistoryView';
 import SettingsView from './views/SettingsView';
+import SupportView from './views/SupportView';
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -17,10 +18,10 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
-        <div className="flex items-center gap-3 text-indigo-600 font-bold text-sm">
-          <span className="w-3 h-3 rounded-full bg-indigo-600 animate-ping"></span>
-          <span>Initializing Vivora AI Platform...</span>
+      <div className="flex items-center justify-center min-h-screen bg-slate-950">
+        <div className="flex items-center gap-3 text-indigo-400 font-bold text-sm">
+          <span className="w-3 h-3 rounded-full bg-indigo-500 animate-ping"></span>
+          <span>Initializing Vivora AI Platform Core...</span>
         </div>
       </div>
     );
@@ -76,6 +77,10 @@ export default function App() {
 
           {currentView === 'analytics' && (
             <HistoryView onInspectReport={handleInspectHistoricalReport} />
+          )}
+
+          {currentView === 'support' && (
+            <SupportView />
           )}
 
           {currentView === 'settings' && (
