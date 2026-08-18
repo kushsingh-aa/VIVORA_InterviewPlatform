@@ -298,13 +298,47 @@ Respond in JSON format:
         const currentIndex = sessionState.currentQuestionIndex || 0;
         const totalQuestions = sessionState.totalQuestions || 4;
 
-        // Record candidate answer in history
-        sessionState.history.push({
-            speaker: "candidate",
-            text: answerText,
-            questionId: sessionState.currentQuestion?.id || `q_${Date.now()}`,
-            timestamp: new Date().toISOString()
-        });
+        // Pre-check for trivial greetings, non-answers, or evasive responses
+        const trimmed = (answerText || "").trim().toLowerCase();
+        const trivialGreetings = ["hello", "hi", "hey", "good morning", "good evening", "good afternoon", "hola", "yo", "sup", "test", "testing", "asdf", "idk", "i don't know", "i dont know", "no idea", "pass", "skip", "n/a", "none"];
+        const isTrivial = trivialGreetings.includes(trimmed) || (trimmed.split(/\s+/).length <= 2 && !trimmed.includes("cache") && !trimmed.includes("sql") && !trimmed.includes("api") && !trimmed.includes("db") && !trimmed.includes("redis") && !trimmed.includes("lock"));
+
+        if (isTrivial) {
+            const feedbackMsg = trimmed.includes("hello") || trimmed.includes("hi") || trimmed.includes("hey")
+                ? `Hello! However, this is a technical assessment chamber. Please provide your architectural and engineering approach to the question asked above.`
+                : `Your response does not address the technical scenario. Please explain how you would solve the technical problem described above.`;
+
+            const nonAnswerEval = {
+                overallScore: 0,
+                technicalDepth: 0,
+                problemSolving: 0,
+                communication: 0,
+                composure: 70,
+                feedback: "No technical answer provided. Response was off-topic or a greeting.",
+                highlights: [],
+                critiques: ["Did not attempt to address the technical scenario.", "Please provide concrete architectural or engineering reasoning."]
+            };
+
+            sessionState.scores.push(nonAnswerEval);
+
+            const followUpInterviewerText = `${feedbackMsg}\n\n**Re-prompt [${difficulty} Level]:**\n${sessionState.currentQuestion?.question || "Please explain your technical approach to the scenario above."}`;
+
+            sessionState.history.push({
+                speaker: "interviewer",
+                text: followUpInterviewerText,
+                isFollowUp: true,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                isComplete: false,
+                isFollowUp: true,
+                interviewerText: followUpInterviewerText,
+                evaluation: nonAnswerEval,
+                questionIndex: currentIndex + 1,
+                totalQuestions
+            };
+        }
 
         const systemPrompt = `You are ${personaInfo.persona}, conducting a live ${archetype.title} interview for a ${sessionState.roleTitle} candidate.
 Review the full conversation history and the candidate's latest response.
@@ -314,16 +348,19 @@ CALIBRATION GUIDELINES FOR ${difficulty} LEVEL:
 - Interviewer Tone: ${archetype.tone}
 - Evaluation Rubric: ${archetype.evalCriteria}
 
-YOUR TASK:
-1. Critically evaluate the candidate's latest response calibrated strictly against the "${difficulty}" bar.
-2. Score their answer (0-100) across:
+CRITICAL SCORING RULES:
+1. If the candidate's answer is incorrect, off-topic, evasive, or lacking technical substance, score overallScore: 0-25, technicalDepth: 0-20.
+2. If the candidate gives a shallow/surface-level answer lacking tradeoffs, score overallScore: 50-65.
+3. If the candidate gives a solid, conceptually accurate answer with clear tools/mechanics, score overallScore: 75-88.
+4. If the candidate gives an exceptional, comprehensive answer covering failure modes, concurrency, and architecture, score overallScore: 89-98.
+5. Score across (0-100):
    - overallScore: holistic mark relative to ${difficulty} expectations
    - technicalDepth: depth relative to ${difficulty} expectations
    - problemSolving: systematic breakdown and reasoning
    - communication: clarity, conciseness, structured delivery
    - composure: confidence and handling of complexity
-3. Identify specific strengths (highlights) and areas to improve (critiques).
-4. Formulate the interviewer's next response:
+6. Identify specific strengths (highlights) and areas to improve (critiques).
+7. Formulate the interviewer's next response:
    - Give 1-2 sentences of realistic interviewer feedback acknowledging their answer.
    - DYNAMICALLY PROBE DEEPER into what they said or ASK THE NEXT QUESTION matching the ${difficulty} seniority level.
    - If total questions (${totalQuestions}) have been completed, set isComplete: true.
@@ -370,7 +407,7 @@ Respond in JSON format:
             let question = lines.slice(1).join("\n") || raw;
 
             const wordCount = answerText.split(/\s+/).length;
-            const score = Math.min(95, Math.max(65, Math.round(72 + (wordCount * 0.3))));
+            const score = wordCount < 5 ? 0 : Math.min(95, Math.max(20, Math.round(55 + (wordCount * 0.3))));
 
             result = {
                 interviewerFeedback: feedback,
@@ -380,20 +417,20 @@ Respond in JSON format:
                 isComplete: false,
                 evaluation: {
                     overallScore: score,
-                    technicalDepth: score + 2,
-                    problemSolving: score,
-                    communication: score - 1,
-                    composure: 88,
+                    technicalDepth: Math.max(0, score),
+                    problemSolving: Math.max(0, score),
+                    communication: Math.max(0, score - 5),
+                    composure: 80,
                     feedback: feedback,
-                    highlights: ["Addressed key aspects of the problem directly"],
-                    critiques: ["Explore deeper edge cases and alternative solutions"]
+                    highlights: score > 50 ? ["Addressed aspects of the problem"] : [],
+                    critiques: score > 50 ? ["Explore deeper edge cases"] : ["Answer lacked technical specifics"]
                 }
             };
         }
 
         if (!result || !result.evaluation) {
             const wordCount = answerText.split(/\s+/).length;
-            const score = Math.min(95, Math.max(50, Math.round(60 + (wordCount * 0.35))));
+            const score = wordCount < 5 ? 0 : Math.min(90, Math.max(25, Math.round(50 + (wordCount * 0.3))));
             const isFollowUp = !sessionState.inFollowUp && currentIndex < totalQuestions - 1;
             sessionState.inFollowUp = isFollowUp;
 
@@ -406,20 +443,20 @@ Respond in JSON format:
             }
 
             result = {
-                interviewerFeedback: score > 75 ? "Good technical breakdown." : "Solid start on the problem.",
+                interviewerFeedback: score > 70 ? "Good technical breakdown." : "Please expand further on your solution mechanics.",
                 isFollowUp,
                 nextQuestion: followUpText,
                 nextTopic: isFollowUp ? "Deep-Dive Verification" : "Data Architecture",
                 isComplete: currentIndex >= totalQuestions - 1 && !isFollowUp,
                 evaluation: {
                     overallScore: score,
-                    technicalDepth: score + 2,
+                    technicalDepth: score,
                     problemSolving: score,
-                    communication: score - 1,
-                    composure: 85,
-                    feedback: "Good grasp of principles with clear communication.",
-                    highlights: ["Addressed the core challenge systematically"],
-                    critiques: ["Elaborate on edge cases and failure handling"]
+                    communication: score,
+                    composure: 80,
+                    feedback: score > 0 ? "Response processed." : "No technical substance detected.",
+                    highlights: score > 60 ? ["Systematic problem breakdown"] : [],
+                    critiques: score > 0 ? ["Elaborate on trade-offs and edge cases"] : ["Please provide an actual technical answer"]
                 }
             };
         }

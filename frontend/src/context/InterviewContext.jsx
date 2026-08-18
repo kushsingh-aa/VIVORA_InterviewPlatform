@@ -170,17 +170,18 @@ export function InterviewProvider({ children }) {
 
       // Compute dynamic clarity & accuracy status based on real LLM evaluation
       const evalData = data.evaluation || {};
-      const clarity = evalData.communication || evalData.overallScore || 85;
-      const techDepth = evalData.technicalDepth || 84;
-      const probSolving = evalData.problemSolving || 82;
-      const overall = evalData.overallScore || 85;
+      const clarity = evalData.communication !== undefined ? evalData.communication : (evalData.overallScore || 0);
+      const techDepth = evalData.technicalDepth !== undefined ? evalData.technicalDepth : 0;
+      const probSolving = evalData.problemSolving !== undefined ? evalData.problemSolving : 0;
+      const overall = evalData.overallScore !== undefined ? evalData.overallScore : 0;
 
       let accuracyLabel = '✓ Crisp & Accurate';
-      if (overall >= 90) accuracyLabel = '🎯 Highly Crisp & Optimal (94%)';
-      else if (overall >= 80) accuracyLabel = '💡 Solid Conceptual Match (85%)';
-      else if (overall >= 70) accuracyLabel = '⚡ Good Reasoning (75%)';
-      else if (overall >= 60) accuracyLabel = '⚠️ Needs Concrete Specifics (65%)';
-      else accuracyLabel = '⚠️ Incomplete / Ambiguous (50%)';
+      if (overall === 0) accuracyLabel = '❌ Off-Topic / Non-Answer (0%)';
+      else if (overall >= 90) accuracyLabel = `🎯 Highly Crisp & Optimal (${overall}%)`;
+      else if (overall >= 80) accuracyLabel = `💡 Solid Conceptual Match (${overall}%)`;
+      else if (overall >= 70) accuracyLabel = `⚡ Good Reasoning (${overall}%)`;
+      else if (overall >= 50) accuracyLabel = `⚠️ Needs Concrete Specifics (${overall}%)`;
+      else accuracyLabel = `⚠️ Incomplete / Ambiguous (${overall}%)`;
 
       // Update live telemetry HUD state with REAL LLM scores
       setLiveEvaluation({
@@ -189,7 +190,7 @@ export function InterviewProvider({ children }) {
         problemSolving: probSolving,
         wpm: computedWpm,
         accuracyStatus: accuracyLabel,
-        latestHighlights: evalData.highlights || ['Clear structured reasoning'],
+        latestHighlights: evalData.highlights?.length > 0 ? evalData.highlights : ['No technical concepts detected'],
         latestCritiques: evalData.critiques || []
       });
 
