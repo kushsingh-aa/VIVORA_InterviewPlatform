@@ -206,6 +206,15 @@ function switchView(viewName) {
         }
     });
 
+    state.activeView = viewName;
+
+    // Immediately cancel and stop all AI speech, microphone recording, and timers when leaving interview chamber
+    if (viewName !== 'interview') {
+        stopAllSpeechAndAudio();
+        stopWebcam();
+        stopInterviewTimer();
+    }
+
     if (viewName === 'login') {
         if (viewLogin) viewLogin.classList.remove('hidden');
         if (mainPlatform) mainPlatform.classList.add('hidden');
@@ -541,6 +550,14 @@ function clearTranscript() {
     if (area) area.value = '';
 }
 
+function stopAllSpeechAndAudio() {
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+    stopMicrophoneRecording();
+    setAiStatus('Ready', 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400');
+}
+
 function confirmEndInterview() {
     if (confirm('Are you sure you want to conclude this interview session? Your telemetry and responses will be aggregated into a final evaluation scorecard.')) {
         forceConcludeInterview();
@@ -548,9 +565,14 @@ function confirmEndInterview() {
 }
 
 async function forceConcludeInterview() {
+    // Immediately terminate all AI speech, mic recording, camera feed, and countdown timers
+    stopAllSpeechAndAudio();
     stopInterviewTimer();
-    stopMicrophoneRecording();
     stopWebcam();
+
+    if (state.currentSession) {
+        state.currentSession.status = 'completed';
+    }
 
     try {
         const configHeaders = state.token ? { headers: { Authorization: `Bearer ${state.token}` } } : {};
@@ -673,6 +695,12 @@ function toggleVoiceOutput() {
 function speakText(cleanText) {
     if (!state.voiceEnabled || !window.speechSynthesis || !cleanText) return;
 
+    // Safety check: Never speak if outside active interview chamber or if session is completed/ended
+    if (state.activeView !== 'interview' || state.currentSession?.status === 'completed') {
+        window.speechSynthesis.cancel();
+        return;
+    }
+
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.rate = state.settings.speechRate || 1.0;
@@ -684,11 +712,19 @@ function speakText(cleanText) {
     if (englishVoice) utterance.voice = englishVoice;
 
     utterance.onstart = () => {
+        if (state.activeView !== 'interview' || state.currentSession?.status === 'completed') {
+            window.speechSynthesis.cancel();
+            return;
+        }
         setAiStatus('Speaking...', 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400');
     };
 
     utterance.onend = () => {
-        setAiStatus('Listening', 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400');
+        if (state.activeView === 'interview' && state.currentSession?.status !== 'completed') {
+            setAiStatus('Listening', 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400');
+        } else {
+            setAiStatus('Ready', 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400');
+        }
     };
 
     window.speechSynthesis.speak(utterance);
@@ -844,6 +880,7 @@ function renderCopilotMessage(text) {
 
 // ==================== FINAL SCORECARD & EVALUATION ====================
 function showFinalScorecard(report) {
+    stopAllSpeechAndAudio();
     if (!report) return;
     switchView('complete');
 
@@ -1259,3 +1296,11 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
 }
+
+// Global cleanup listeners to stop speech when leaving or closing page
+window.addEventListener('beforeunload', () => {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+});
+window.addEventListener('pagehide', () => {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+});
