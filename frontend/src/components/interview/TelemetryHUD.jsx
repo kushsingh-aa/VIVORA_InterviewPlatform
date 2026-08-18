@@ -1,164 +1,168 @@
 import React from 'react';
-import { Camera, Eye, Activity, Sparkles, CheckCircle2, Shield, HeartPulse, Zap } from 'lucide-react';
+import { MessageSquare, Languages, Target, Eye } from 'lucide-react';
 import { useTelemetry } from '../../hooks/useTelemetry';
-import { useInterview } from '../../context/InterviewContext';
 
 export default function TelemetryHUD() {
-  const { activeSession } = useInterview();
   const { metrics, videoRef, cameraAvailable } = useTelemetry(true);
-
-  const totalQuestions = activeSession?.totalQuestions || 4;
-  const currentIdx = activeSession?.questionIndex || 1;
 
   return (
     <div className="space-y-4">
       
-      {/* Webcam & Biometric Target Card */}
-      <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-5 space-y-3.5 shadow-md">
+      {/* Top Live Assessment Chamber Video Box */}
+      <div className="relative aspect-[16/10] bg-[#090f1d] border border-[#17233f] rounded-2xl overflow-hidden shadow-lg p-3 flex flex-col justify-between">
         
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
-              <Camera size={14} />
-            </div>
-            <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-              Live Biometrics HUD
-            </span>
+        {/* Top Video Header */}
+        <div className="flex items-center justify-between z-10 font-mono text-[10px] text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+            <span className="font-bold text-slate-200 uppercase tracking-wider">LIVE</span>
           </div>
-          <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-            Telemetry Stream
-          </span>
+          <span className="tracking-widest uppercase text-slate-400">LIVE ASSESSMENT CHAMBER</span>
         </div>
 
-        {/* Video Canvas Container */}
-        <div className="relative w-full aspect-video bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-800 shadow-inner group">
+        {/* Video Canvas or Reticle Placeholder */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover -scale-x-100"
+            className="w-full h-full object-cover -scale-x-100 opacity-40 mix-blend-screen"
           />
 
-          {!cameraAvailable && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-slate-950/85 text-slate-400">
-              <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-2 text-indigo-400">
-                <Camera size={22} />
-              </div>
-              <p className="text-xs font-bold text-slate-200">Camera Feed Synthetic</p>
-              <p className="text-[10px] text-slate-500 max-w-[200px] mt-0.5">Biometric telemetry modeled via audio cadence & response latency</p>
-            </div>
-          )}
-
-          {/* Futuristic HUD Scanning Reticle Overlay */}
-          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            {/* Outer Rotating Radar Line */}
-            <div className="w-36 h-36 border border-indigo-500/20 rounded-full radar-sweep flex items-center justify-center">
-              <div className="w-1/2 h-0.5 bg-gradient-to-r from-transparent to-indigo-400 origin-right"></div>
-            </div>
-            
-            {/* Inner Bounding Target Box */}
-            <div className="absolute w-28 h-28 border border-indigo-400/40 rounded-2xl flex items-center justify-center">
-              <div className="w-2 h-2 border-t-2 border-l-2 border-indigo-400 absolute -top-1 -left-1"></div>
-              <div className="w-2 h-2 border-t-2 border-r-2 border-indigo-400 absolute -top-1 -right-1"></div>
-              <div className="w-2 h-2 border-b-2 border-l-2 border-indigo-400 absolute -bottom-1 -left-1"></div>
-              <div className="w-2 h-2 border-b-2 border-r-2 border-indigo-400 absolute -bottom-1 -right-1"></div>
-            </div>
+          {/* Corner Reticles [ ] */}
+          <div className="absolute inset-4 border border-[#22355e]/50 pointer-events-none">
+            <div className="w-3 h-3 border-t-2 border-l-2 border-indigo-400 absolute -top-0.5 -left-0.5"></div>
+            <div className="w-3 h-3 border-t-2 border-r-2 border-indigo-400 absolute -top-0.5 -right-0.5"></div>
+            <div className="w-3 h-3 border-b-2 border-l-2 border-indigo-400 absolute -bottom-0.5 -left-0.5"></div>
+            <div className="w-3 h-3 border-b-2 border-r-2 border-indigo-400 absolute -bottom-0.5 -right-0.5"></div>
           </div>
 
-          {/* Focal Attention Tag */}
-          <div className="absolute bottom-2.5 left-2.5 bg-slate-900/90 backdrop-blur-md px-3 py-1 rounded-xl text-[10px] font-bold text-slate-200 border border-slate-700/80 flex items-center gap-1.5 shadow-lg">
-            <Eye size={12} className="text-emerald-400" />
-            <span>Focal Index: <strong className="text-white">{metrics.focus}%</strong></span>
-          </div>
-
-          <div className="absolute top-2.5 right-2.5 bg-slate-900/90 backdrop-blur-md px-2 py-0.5 rounded-lg text-[9px] font-bold text-indigo-300 border border-indigo-500/30">
-            60 FPS
+          {/* Center Circular Focus Reticle */}
+          <div className="w-28 h-28 border border-indigo-400/30 rounded-full flex items-center justify-center">
+            <div className="w-20 h-20 border border-dashed border-cyan-400/40 rounded-full flex items-center justify-center">
+              <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-sm shadow-cyan-400"></div>
+            </div>
           </div>
         </div>
 
-        {/* Telemetry Metrics Grid */}
-        <div className="grid grid-cols-3 gap-2 text-center pt-1">
-          <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-2.5">
-            <span className="block text-[10px] font-black uppercase text-slate-400 tracking-wider">Cadence</span>
-            <span className="font-mono font-black text-sm text-slate-900 dark:text-white mt-0.5 block">
-              {metrics.wpm} <span className="text-[10px] font-bold text-slate-400">WPM</span>
-            </span>
-          </div>
-
-          <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-2.5">
-            <span className="block text-[10px] font-black uppercase text-slate-400 tracking-wider">Clarity</span>
-            <span className="font-mono font-black text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 block">
-              {metrics.clarity}%
-            </span>
-          </div>
-
-          <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-2.5">
-            <span className="block text-[10px] font-black uppercase text-slate-400 tracking-wider">Composure</span>
-            <span className="font-mono font-black text-sm text-indigo-600 dark:text-indigo-400 mt-0.5 block">
-              {100 - metrics.stressIndex}%
-            </span>
-          </div>
+        {/* Bottom Video Telemetry Subtext */}
+        <div className="flex items-center justify-between z-10 font-mono text-[9px] text-slate-400 border-t border-[#131d33] pt-2">
+          <span>ASSESSMENT: ARCHITECTURE SIMULATION</span>
+          <span>STATUS: ACTIVE</span>
+          <span className="text-cyan-400 font-bold">INTEGRITY: 99.7%</span>
         </div>
 
       </div>
 
-      {/* Progression Tracker */}
-      <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-5 space-y-3.5 shadow-md">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-            Chamber Progress
-          </span>
-          <span className="px-2.5 py-0.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-black rounded-lg">
-            Q{currentIdx} / {totalQuestions}
+      {/* 2x2 Telemetry Cards Grid */}
+      <div className="grid grid-cols-2 gap-3.5 font-mono">
+        
+        {/* Card 1: SPEECH RATE */}
+        <div className="bg-[#0b1324] border border-[#17233f] rounded-2xl p-4 flex flex-col justify-between space-y-3 shadow-md">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-bold tracking-widest uppercase text-cyan-300">
+              SPEECH RATE
+            </span>
+            <MessageSquare size={13} className="text-slate-400" />
+          </div>
+
+          <div className="space-y-1">
+            <span className="font-bold text-xs sm:text-sm text-slate-200 block">
+              {metrics.wpm || 142} WPM
+            </span>
+
+            {/* Mini Bar Chart */}
+            <div className="flex items-end gap-1 h-6 pt-1">
+              <span className="w-2 bg-cyan-400/40 rounded-sm" style={{ height: '35%' }}></span>
+              <span className="w-2 bg-cyan-400/60 rounded-sm" style={{ height: '60%' }}></span>
+              <span className="w-2 bg-cyan-400/80 rounded-sm" style={{ height: '90%' }}></span>
+              <span className="w-2 bg-cyan-400/50 rounded-sm" style={{ height: '50%' }}></span>
+              <span className="w-2 bg-cyan-400/70 rounded-sm" style={{ height: '75%' }}></span>
+            </div>
+          </div>
+
+          <span className="text-[9px] text-cyan-400/90 font-medium">
+            Optimal Range (130-160)
           </span>
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden shadow-inner">
-          <div 
-            className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 h-2 rounded-full transition-all duration-500 shadow-sm"
-            style={{ width: `${Math.min(100, Math.round((currentIdx / totalQuestions) * 100))}%` }}
-          />
+        {/* Card 2: VOCAB CLARITY */}
+        <div className="bg-[#0b1324] border border-[#17233f] rounded-2xl p-4 flex flex-col justify-between space-y-3 shadow-md">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-bold tracking-widest uppercase text-purple-300">
+              VOCAB CLARITY
+            </span>
+            <Languages size={13} className="text-slate-400" />
+          </div>
+
+          {/* Circular Percentage Gauge */}
+          <div className="flex items-center justify-center py-1">
+            <div className="relative w-14 h-14 rounded-full border-4 border-[#16223e] border-t-purple-400 border-r-purple-500 flex items-center justify-center">
+              <span className="text-xs font-bold text-slate-200">
+                {metrics.clarity || 92}%
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-[#121a2f] border border-[#192748] text-purple-300 text-center py-1 rounded-lg text-[9px] font-bold">
+            Highly Articulate
+          </div>
         </div>
 
-        <div className="space-y-2 pt-1">
-          {Array.from({ length: totalQuestions }).map((_, idx) => {
-            const num = idx + 1;
-            const isDone = num < currentIdx;
-            const isCurrent = num === currentIdx;
+        {/* Card 3: COMPOSURE */}
+        <div className="bg-[#0b1324] border border-[#17233f] rounded-2xl p-4 flex flex-col justify-between space-y-3 shadow-md">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-bold tracking-widest uppercase text-slate-300">
+              COMPOSURE
+            </span>
+            <Target size={13} className="text-slate-400" />
+          </div>
 
-            return (
+          <div className="space-y-2">
+            <span className="font-bold text-xs sm:text-sm text-slate-200 block">
+              {100 - (metrics.stressIndex || 12)} / 100
+            </span>
+
+            {/* Slider bar */}
+            <div className="w-full bg-[#16223e] rounded-full h-1.5 overflow-hidden">
               <div 
-                key={num}
-                className={`flex items-center justify-between p-2.5 rounded-xl text-xs transition-all ${
-                  isCurrent 
-                    ? 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 font-bold shadow-sm'
-                    : isDone
-                    ? 'text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/30'
-                    : 'text-slate-400 dark:text-slate-600'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
-                    isDone 
-                      ? 'bg-emerald-500 text-white' 
-                      : isCurrent 
-                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30 animate-pulse' 
-                      : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
-                  }`}>
-                    {isDone ? '✓' : num}
-                  </span>
-                  <span className="font-semibold">Question {num}</span>
-                </div>
-                <span className="text-[10px] uppercase font-black tracking-wider">
-                  {isDone ? 'Evaluated' : isCurrent ? 'Active Probe' : 'Pending'}
-                </span>
-              </div>
-            );
-          })}
+                className="h-1.5 rounded-full bg-gradient-to-r from-purple-500 via-indigo-400 to-cyan-300"
+                style={{ width: `${100 - (metrics.stressIndex || 12)}%` }}
+              />
+            </div>
+
+            <div className="flex justify-between text-[8px] text-slate-400">
+              <span>Stressed</span>
+              <span>Calm</span>
+            </div>
+          </div>
         </div>
+
+        {/* Card 4: GAZE FOCUS */}
+        <div className="bg-[#0b1324] border border-[#17233f] rounded-2xl p-4 flex flex-col justify-between space-y-3 shadow-md">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-bold tracking-widest uppercase text-cyan-300">
+              GAZE FOCUS
+            </span>
+            <Eye size={13} className="text-slate-400" />
+          </div>
+
+          {/* Reticle Graphic */}
+          <div className="flex items-center justify-center py-1">
+            <div className="relative w-14 h-14 border border-[#1c2c50] rounded-full flex items-center justify-center">
+              <div className="absolute inset-0 border border-dashed border-[#243968] rounded-full"></div>
+              <div className="w-full h-px bg-[#1c2c50] absolute"></div>
+              <div className="h-full w-px bg-[#1c2c50] absolute"></div>
+              <div className="w-2.5 h-2.5 bg-cyan-400 rounded-full shadow-sm shadow-cyan-400 animate-pulse"></div>
+            </div>
+          </div>
+
+          <span className="text-[9px] text-slate-400 text-center block">
+            Locked on Center
+          </span>
+        </div>
+
       </div>
 
     </div>
