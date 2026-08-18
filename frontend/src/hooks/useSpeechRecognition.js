@@ -5,89 +5,108 @@ export function useSpeechRecognition({ onTranscriptUpdate, onLivePreview } = {})
   const [isSupported, setIsSupported] = useState(true);
   const [micVolume, setMicVolume] = useState(0);
   const [micError, setMicError] = useState(null);
-  const [isNoiseFiltered, setIsNoiseFiltered] = useState(true);
 
   const recognitionRef = useRef(null);
   const shouldRecordRef = useRef(false);
+  const onTranscriptUpdateRef = useRef(onTranscriptUpdate);
+  const onLivePreviewRef = useRef(onLivePreview);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const micStreamRef = useRef(null);
   const animFrameRef = useRef(null);
   const restartTimeoutRef = useRef(null);
 
-  // Initialize SpeechRecognition engine
+  // Keep callback refs up to date without triggering useEffect rebuilds
+  useEffect(() => {
+    onTranscriptUpdateRef.current = onTranscriptUpdate;
+    onLivePreviewRef.current = onLivePreview;
+  });
+
+  // Initialize SpeechRecognition engine ONCE on mount
   useEffect(() => {
     const SpeechRecognition = typeof window !== 'undefined'
       ? (window.SpeechRecognition || window.webkitSpeechRecognition)
       : null;
 
     if (!SpeechRecognition) {
+      console.warn('SpeechRecognition API is not supported in this browser.');
       setIsSupported(false);
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    recognition.maxAlternatives = 1;
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      recognition.maxAlternatives = 1;
 
-    recognition.onresult = (event) => {
-      let interimTranscript = '';
-      let finalTranscript = '';
+      recognition.onstart = () => {
+        setIsRecording(true);
+        setMicError(null);
+      };
 
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        const transcriptPart = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcriptPart + ' ';
-        } else {
-          interimTranscript += transcriptPart;
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcriptPart = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcriptPart + ' ';
+          } else {
+            interimTranscript += transcriptPart;
+          }
         }
-      }
 
-      if (finalTranscript && onTranscriptUpdate) {
-        onTranscriptUpdate(finalTranscript.trim());
-      } else if (interimTranscript && onLivePreview) {
-        onLivePreview(interimTranscript.trim());
-      }
-    };
+        if (finalTranscript && onTranscriptUpdateRef.current) {
+          onTranscriptUpdateRef.current(finalTranscript.trim());
+        }
+        if (onLivePreviewRef.current) {
+          onLivePreviewRef.current(interimTranscript.trim());
+        }
+      };
 
-    recognition.onerror = (event) => {
-      console.warn('Speech recognition status/error:', event.error);
-      // For temporary no-speech or network glitches in noisy rooms, auto-recover
-      if (event.error === 'no-speech' || event.error === 'audio-capture') {
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition status/error event:', event.error);
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          setMicError('Microphone permission denied. Please allow microphone access in your browser.');
+          shouldRecordRef.current = false;
+          setIsRecording(false);
+        } else if (event.error === 'no-speech' || event.error === 'audio-capture' || event.error === 'network') {
+          // Auto-recover if user is still in recording mode
+          if (shouldRecordRef.current) {
+            clearTimeout(restartTimeoutRef.current);
+            restartTimeoutRef.current = setTimeout(() => {
+              if (shouldRecordRef.current && recognitionRef.current) {
+                try { recognitionRef.current.start(); } catch (e) {}
+              }
+            }, 100);
+          }
+        }
+      };
+
+      recognition.onend = () => {
+        // Auto-restart if user has not explicitly clicked stop
         if (shouldRecordRef.current) {
           clearTimeout(restartTimeoutRef.current);
           restartTimeoutRef.current = setTimeout(() => {
-            if (shouldRecordRef.current) {
-              try { recognition.start(); } catch (e) {}
+            if (shouldRecordRef.current && recognitionRef.current) {
+              try {
+                recognitionRef.current.start();
+              } catch (err) {}
             }
-          }, 80);
+          }, 100);
+        } else {
+          setIsRecording(false);
         }
-      } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-        setMicError('Microphone permission denied.');
-        shouldRecordRef.current = false;
-        setIsRecording(false);
-      }
-    };
+      };
 
-    recognition.onend = () => {
-      // Auto-restart immediately if user has not explicitly clicked stop
-      if (shouldRecordRef.current) {
-        clearTimeout(restartTimeoutRef.current);
-        restartTimeoutRef.current = setTimeout(() => {
-          if (shouldRecordRef.current) {
-            try {
-              recognition.start();
-            } catch (err) {}
-          }
-        }, 80);
-      } else {
-        setIsRecording(false);
-      }
-    };
-
-    recognitionRef.current = recognition;
+      recognitionRef.current = recognition;
+    } catch (e) {
+      console.warn('Failed to initialize SpeechRecognition:', e);
+      setIsSupported(false);
+    }
 
     return () => {
       shouldRecordRef.current = false;
@@ -97,18 +116,18 @@ export function useSpeechRecognition({ onTranscriptUpdate, onLivePreview } = {})
       }
       stopAudioAnalysis();
     };
-  }, [onTranscriptUpdate, onLivePreview]);
+  }, []); // Run ONLY ONCE on mount
 
-  // Start Web Audio API DSP pipeline with hardware filters & compressor for high noise rejection
+  // Start Web Audio API volume detection
   const startAudioAnalysis = async () => {
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          echoCancellation: { ideal: true },
-          noiseSuppression: { ideal: true },
-          autoGainControl: { ideal: true },
-          channelCount: 1,
-          sampleRate: { ideal: 48000 }
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
         }
       });
       micStreamRef.current = stream;
@@ -118,36 +137,18 @@ export function useSpeechRecognition({ onTranscriptUpdate, onLivePreview } = {})
         const ctx = new AudioContext();
         audioContextRef.current = ctx;
 
-        // 1. Highpass filter: cuts ambient low rumble, fan hum, desk thumps (< 95Hz)
         const highpass = ctx.createBiquadFilter();
         highpass.type = 'highpass';
-        highpass.frequency.setValueAtTime(95, ctx.currentTime);
+        highpass.frequency.setValueAtTime(80, ctx.currentTime);
 
-        // 2. Lowpass filter: cuts high-frequency hiss, keyboard clatter (> 3800Hz)
-        const lowpass = ctx.createBiquadFilter();
-        lowpass.type = 'lowpass';
-        lowpass.frequency.setValueAtTime(3800, ctx.currentTime);
-
-        // 3. Dynamics Compressor: squashes noise bursts & normalizes speech volume
-        const compressor = ctx.createDynamicsCompressor();
-        compressor.threshold.setValueAtTime(-45, ctx.currentTime);
-        compressor.knee.setValueAtTime(30, ctx.currentTime);
-        compressor.ratio.setValueAtTime(10, ctx.currentTime);
-        compressor.attack.setValueAtTime(0.003, ctx.currentTime);
-        compressor.release.setValueAtTime(0.25, ctx.currentTime);
-
-        // 4. Analyser Node
         const analyser = ctx.createAnalyser();
         analyser.fftSize = 64;
-        analyser.smoothingTimeConstant = 0.8;
+        analyser.smoothingTimeConstant = 0.6;
         analyserRef.current = analyser;
 
-        // Connect DSP Graph
         const source = ctx.createMediaStreamSource(stream);
         source.connect(highpass);
-        highpass.connect(lowpass);
-        lowpass.connect(compressor);
-        compressor.connect(analyser);
+        highpass.connect(analyser);
 
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
@@ -159,24 +160,20 @@ export function useSpeechRecognition({ onTranscriptUpdate, onLivePreview } = {})
             sum += dataArray[i];
           }
           const avg = sum / dataArray.length;
-          // Apply noise floor threshold filter (ignore ambient room noise under 10)
-          const adjusted = avg < 10 ? 0 : avg;
-          setMicVolume(Math.min(100, Math.round((adjusted / 110) * 100)));
+          setMicVolume(Math.min(100, Math.round((avg / 120) * 100)));
           animFrameRef.current = requestAnimationFrame(updateVolume);
         };
         updateVolume();
       }
-      setMicError(null);
-      setIsNoiseFiltered(true);
     } catch (err) {
-      console.warn('Microphone stream error:', err.message);
-      setMicError('Microphone access unavailable or blocked.');
+      console.warn('Optional audio analyser could not start:', err.message);
     }
   };
 
   const stopAudioAnalysis = () => {
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
     }
     if (micStreamRef.current) {
       micStreamRef.current.getTracks().forEach(track => track.stop());
@@ -190,32 +187,37 @@ export function useSpeechRecognition({ onTranscriptUpdate, onLivePreview } = {})
   };
 
   const startRecording = useCallback(() => {
+    setMicError(null);
+    shouldRecordRef.current = true;
+    setIsRecording(true);
+
     if (recognitionRef.current) {
       try {
-        shouldRecordRef.current = true;
         recognitionRef.current.start();
-        setIsRecording(true);
-        startAudioAnalysis();
       } catch (e) {
-        console.warn('Error starting speech recognition:', e);
+        // May already be started
       }
     }
+
+    startAudioAnalysis();
   }, []);
 
   const stopRecording = useCallback(() => {
     shouldRecordRef.current = false;
     clearTimeout(restartTimeoutRef.current);
+    setIsRecording(false);
+
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
       } catch (e) {}
     }
-    setIsRecording(false);
+
     stopAudioAnalysis();
   }, []);
 
   const toggleRecording = useCallback(() => {
-    if (isRecording) {
+    if (shouldRecordRef.current || isRecording) {
       stopRecording();
     } else {
       startRecording();
@@ -227,7 +229,6 @@ export function useSpeechRecognition({ onTranscriptUpdate, onLivePreview } = {})
     isSupported,
     micVolume,
     micError,
-    isNoiseFiltered,
     startRecording,
     stopRecording,
     toggleRecording
