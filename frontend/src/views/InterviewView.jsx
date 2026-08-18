@@ -26,7 +26,7 @@ export default function InterviewView({ onConclude }) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-3 relative">
+    <div className="max-w-7xl mx-auto space-y-4 relative animate-in fade-in duration-300">
       
       {/* Top Persona & Timer Header */}
       <PersonaHeader onEndInterview={handleEndInterview} />
@@ -34,8 +34,8 @@ export default function InterviewView({ onConclude }) {
       {/* Main 2-Column Assessment Chamber Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Left Column: Chat Dialogue Stream & Clean Input Dock (7 Cols) */}
-        <div className="lg:col-span-7 flex flex-col justify-between space-y-2">
+        {/* Left Column: Chat Dialogue Stream & Spacious Answer Desk (7 Cols) */}
+        <div className="lg:col-span-7 flex flex-col space-y-3">
           <ChatStream />
           <ChatInput 
             onComplete={handleResponseCompleted} 
@@ -44,7 +44,7 @@ export default function InterviewView({ onConclude }) {
         </div>
 
         {/* Right Column: Telemetry & Video HUD (5 Cols) */}
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-5 sticky top-4">
           <TelemetryHUD />
         </div>
 
