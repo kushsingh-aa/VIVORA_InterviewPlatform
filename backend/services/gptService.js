@@ -572,11 +572,70 @@ Keep responses concise (2-4 sentences or bullet points) and encouraging.`;
     generateFinalReport: async (sessionState, apiKey = null) => {
         const scores = sessionState.scores || [];
         const difficulty = sessionState.difficulty || "Senior";
-        const avgTech = scores.length ? Math.round(scores.reduce((a, s) => a + (s.technicalDepth || 75), 0) / scores.length) : 85;
-        const avgProb = scores.length ? Math.round(scores.reduce((a, s) => a + (s.problemSolving || 75), 0) / scores.length) : 84;
-        const avgComm = scores.length ? Math.round(scores.reduce((a, s) => a + (s.communication || 75), 0) / scores.length) : 86;
-        const avgComp = scores.length ? Math.round(scores.reduce((a, s) => a + (s.composure || 85), 0) / scores.length) : 88;
+        const candidateAnswers = (sessionState.history || []).filter(h => h.speaker === "candidate");
+
+        // If candidate submitted no answers or session was closed immediately
+        if (candidateAnswers.length === 0 || scores.length === 0) {
+            return {
+                sessionId: sessionState.sessionId || 'sess_' + Date.now(),
+                track: sessionState.track || "software",
+                roleTitle: sessionState.roleTitle || `${difficulty} Software Engineer`,
+                difficulty,
+                overallScore: 0,
+                recommendation: "Incomplete / No Answers Provided",
+                metrics: {
+                    technicalDepth: 0,
+                    problemSolving: 0,
+                    communication: 0,
+                    composure: 0,
+                    focalAttention: 0,
+                    stressIndex: 0
+                },
+                executiveSummary: "The assessment chamber was concluded before any technical answers were submitted. No evaluation metrics could be recorded.",
+                keyStrengths: ["Session was ended without response submissions."],
+                areasForGrowth: ["Complete technical problem prompts to generate evaluation scorecard."],
+                questionBreakdown: [],
+                completedAt: new Date().toISOString()
+            };
+        }
+
+        const avgTech = Math.round(scores.reduce((a, s) => a + (s.technicalDepth !== undefined ? s.technicalDepth : 0), 0) / scores.length);
+        const avgProb = Math.round(scores.reduce((a, s) => a + (s.problemSolving !== undefined ? s.problemSolving : 0), 0) / scores.length);
+        const avgComm = Math.round(scores.reduce((a, s) => a + (s.communication !== undefined ? s.communication : 0), 0) / scores.length);
+        const avgComp = Math.round(scores.reduce((a, s) => a + (s.composure !== undefined ? s.composure : 70), 0) / scores.length);
         const overallScore = Math.round((avgTech * 0.35) + (avgProb * 0.3) + (avgComm * 0.25) + (avgComp * 0.1));
+
+        const questionBreakdown = candidateAnswers.map((item, idx) => ({
+            questionNumber: idx + 1,
+            candidateAnswer: item.text,
+            score: sessionState.scores[idx]?.overallScore !== undefined ? sessionState.scores[idx].overallScore : 0,
+            feedback: sessionState.scores[idx]?.feedback || (sessionState.scores[idx]?.isOffTopic ? "Off-topic response." : `Answer evaluated against ${difficulty}-level benchmark.`)
+        }));
+
+        // If candidate submitted only off-topic non-answers
+        if (overallScore === 0) {
+            return {
+                sessionId: sessionState.sessionId || 'sess_' + Date.now(),
+                track: sessionState.track || "software",
+                roleTitle: sessionState.roleTitle || `${difficulty} Software Engineer`,
+                difficulty,
+                overallScore: 0,
+                recommendation: "No Hire / Off-Topic Responses",
+                metrics: {
+                    technicalDepth: 0,
+                    problemSolving: 0,
+                    communication: 0,
+                    composure: avgComp,
+                    focalAttention: 60,
+                    stressIndex: 20
+                },
+                executiveSummary: "The candidate's responses did not address the technical problems or were off-topic non-answers. No technical competence was demonstrated.",
+                keyStrengths: ["Attempted initial greeting or interaction."],
+                areasForGrowth: ["Must directly address the core technical questions, algorithms, and system mechanics."],
+                questionBreakdown,
+                completedAt: new Date().toISOString()
+            };
+        }
 
         const systemPrompt = `You are a Senior Bar Raiser & Hiring Committee Lead.
 Review the candidate's interview session history and compile an executive hiring evaluation calibrated strictly against the "${difficulty}" seniority benchmark.
@@ -619,15 +678,6 @@ Respond in JSON format:
                 ]
             };
         }
-
-        const questionBreakdown = (sessionState.history || [])
-            .filter(h => h.speaker === "candidate")
-            .map((item, idx) => ({
-                questionNumber: idx + 1,
-                candidateAnswer: item.text,
-                score: sessionState.scores[idx]?.overallScore || 80,
-                feedback: sessionState.scores[idx]?.feedback || `Answer demonstrated solid command of ${difficulty}-level principles.`
-            }));
 
         return {
             sessionId: sessionState.sessionId || 'sess_' + Date.now(),
