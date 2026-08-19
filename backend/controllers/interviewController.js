@@ -2,6 +2,7 @@ const Interview = require("../models/Interview");
 const Chat = require("../models/Chat");
 const { getIsConnected, inMemoryStore } = require("../config/db");
 const gptService = require("../services/gptService");
+const visionService = require("../services/visionService");
 
 // In-memory active session cache for ultra-fast conversational state
 const activeSessions = new Map();
@@ -254,6 +255,27 @@ const assistantChat = async (req, res) => {
 };
 
 /**
+ * Record real-time Computer Vision & Biometric Telemetry (MediaPipe Iris/Gaze & Pose)
+ */
+const recordTelemetry = async (req, res) => {
+    try {
+        const { sessionId, telemetryData } = req.body;
+        const analysis = visionService.analyzeFrame(telemetryData);
+
+        const session = activeSessions.get(sessionId);
+        if (session) {
+            if (!session.telemetryLog) session.telemetryLog = [];
+            session.telemetryLog.push(analysis);
+            if (session.telemetryLog.length > 200) session.telemetryLog.shift(); // Bound memory
+        }
+
+        res.json({ success: true, analysis });
+    } catch (err) {
+        res.status(500).json({ message: "Telemetry recording error", error: err.message });
+    }
+};
+
+/**
  * Force complete interview and get final evaluation
  */
 const completeInterview = async (req, res) => {
@@ -265,11 +287,15 @@ const completeInterview = async (req, res) => {
         if (!session) {
             const mockSession = await gptService.initSession("software", "Senior", "Candidate", effectiveApiKey);
             const report = await gptService.generateFinalReport(mockSession, effectiveApiKey);
+            const visionReport = visionService.generateSessionSummary([]);
+            report.visionBiometrics = visionReport;
             return res.json({ success: true, report });
         }
 
         session.status = "completed";
         const report = await gptService.generateFinalReport(session, effectiveApiKey);
+        const visionReport = visionService.generateSessionSummary(session.telemetryLog || []);
+        report.visionBiometrics = visionReport;
 
         // Update in MongoDB
         if (getIsConnected()) {
@@ -346,6 +372,7 @@ module.exports = {
     submitMessage,
     getHint,
     assistantChat,
+    recordTelemetry,
     completeInterview,
     getHistory
 };

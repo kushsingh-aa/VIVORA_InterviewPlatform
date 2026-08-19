@@ -7,6 +7,7 @@ const {
     submitMessage,
     getHint,
     assistantChat,
+    recordTelemetry,
     completeInterview,
     getHistory
 } = require("../controllers/interviewController");
@@ -22,6 +23,9 @@ router.post("/hint", verifyToken, getHint);
 
 // Chat with side-by-side Vivora AI Copilot
 router.post("/assistant", verifyToken, assistantChat);
+
+// Sync real-time MediaPipe Vision Telemetry
+router.post("/telemetry", verifyToken, recordTelemetry);
 
 // End / Complete interview and generate scorecard
 router.post("/complete", verifyToken, completeInterview);
