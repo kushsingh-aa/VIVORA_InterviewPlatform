@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,8 +6,9 @@
 
 @layer base {
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    @apply antialiased bg-[#070b14] text-slate-100 selection:bg-indigo-500 selection:text-white;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    @apply antialiased bg-gradient-to-br from-[#f8faff] via-[#eef4ff] to-[#f3efff] text-slate-800 selection:bg-indigo-500 selection:text-white min-h-screen;
+    background-attachment: fixed;
   }
 
   code, pre, kbd, .font-mono {
@@ -15,28 +16,55 @@
   }
 }
 
-/* Glassmorphism & Cyber Card Utilities */
+/* Luxurious White / Light Blue Glassmorphism */
 .glass-panel {
-  background: rgba(11, 19, 38, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
 }
 
+.glass-panel-subtle {
+  background: rgba(248, 250, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.purple-blue-gradient {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #2563eb 100%);
+}
+
+.purple-blue-gradient-hover {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #1d4ed8 100%);
+}
+
+.soft-purple-blue-fade {
+  background: linear-gradient(135deg, #eef2ff 0%, #f3e8ff 50%, #e0f2fe 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #312e81 0%, #4f46e5 40%, #7c3aed 70%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(8, 14, 28, 0.6);
+  background: rgba(238, 242, 255, 0.6);
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.35);
+  background: rgba(165, 180, 252, 0.6);
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.7);
+  background: rgba(129, 140, 248, 0.8);
 }
 
 ::-webkit-scrollbar {
@@ -47,11 +75,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
+  background: rgba(203, 213, 225, 0.6);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.5);
+  background: rgba(148, 163, 184, 0.8);
 }
 
 /* Equalizer Bars Animation */
@@ -65,7 +93,7 @@
   display: inline-block;
   width: 3px;
   border-radius: 9999px;
-  background: linear-gradient(to top, #6366f1, #a855f7);
+  background: linear-gradient(to top, #4f46e5, #7c3aed);
 }
 .live-bar:nth-child(1) { animation: barWave 0.7s ease-in-out infinite; }
 .live-bar:nth-child(2) { animation: barWave 1.0s ease-in-out infinite 0.15s; }
@@ -77,5 +105,5 @@
   display: inline-block;
   width: 3.5px;
   border-radius: 2px;
-  background: linear-gradient(to top, #38bdf8, #818cf8);
+  background: linear-gradient(to top, #6366f1, #38bdf8);
 }

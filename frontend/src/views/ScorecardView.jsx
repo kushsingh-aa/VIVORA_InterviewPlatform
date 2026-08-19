@@ -90,37 +90,39 @@ ${(report.areasForGrowth || []).map(g => `• ${g}`).join('\n')}
     <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-200 pb-12">
       
       {/* Top Banner */}
-      <div className="bg-[#0b1324] border border-[#17233f] rounded-2xl p-6 sm:p-8 shadow-xl flex flex-wrap items-center justify-between gap-6 relative overflow-hidden">
+      <div className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-6 sm:p-8 shadow-xl shadow-indigo-900/5 flex flex-wrap items-center justify-between gap-6 relative overflow-hidden">
         
         <div className="space-y-2.5 max-w-xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#101b33] border border-[#1c2e56] rounded-full text-[10px] font-mono font-bold text-purple-300">
-            <Award size={13} className="text-purple-400" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-full text-xs font-bold text-indigo-700 shadow-sm">
+            <Award size={14} className="text-indigo-600" />
             <span>VERIFIED AI TECHNICAL SCORECARD</span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             {report.roleTitle || 'Candidate'} Evaluation
           </h1>
 
-          <p className="text-xs sm:text-sm text-slate-300 font-normal leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-600 font-normal leading-relaxed">
             {report.executiveSummary}
           </p>
         </div>
 
         {/* Overall Score Badge */}
-        <div className="bg-[#0e172e] border border-[#1c2d52] rounded-2xl p-6 text-center min-w-[170px] space-y-1.5 shadow-md">
-          <span className="block text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">
+        <div className="bg-gradient-to-br from-[#f8faff] via-[#eef4ff] to-[#f4f0ff] border border-indigo-100 rounded-3xl p-6 text-center min-w-[170px] space-y-1.5 shadow-md">
+          <span className="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">
             Overall Score
           </span>
-          <span className={`font-mono font-black text-5xl block ${isZero ? 'text-slate-500' : 'text-purple-300'}`}>
+          <span className={`font-black text-5xl block ${
+            isZero ? 'text-slate-400' : 'bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent'
+          }`}>
             {report.overallScore}%
           </span>
-          <span className={`inline-block px-3 py-0.5 border text-[10px] font-mono font-bold rounded-full uppercase ${
+          <span className={`inline-block px-3.5 py-1 border text-xs font-extrabold rounded-full uppercase ${
             isZero 
-              ? 'bg-rose-950/60 border-rose-800 text-rose-300'
+              ? 'bg-rose-50 border-rose-200 text-rose-700'
               : report.overallScore >= 80 
-              ? 'bg-emerald-950/60 border-emerald-800/80 text-emerald-400' 
-              : 'bg-amber-950/60 border-amber-800 text-amber-300'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+              : 'bg-amber-50 border-amber-200 text-amber-700'
           }`}>
             {report.recommendation || 'Evaluated'}
           </span>
@@ -130,15 +132,15 @@ ${(report.areasForGrowth || []).map(g => `• ${g}`).join('\n')}
       {/* 4 Metric Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         {[
-          { label: 'TECHNICAL DEPTH', score: report.metrics?.technicalDepth || 0, color: 'text-indigo-400', bar: 'bg-indigo-500' },
-          { label: 'PROBLEM SOLVING', score: report.metrics?.problemSolving || 0, color: 'text-cyan-400', bar: 'bg-cyan-400' },
-          { label: 'COMMUNICATION', score: report.metrics?.communication || 0, color: 'text-purple-400', bar: 'bg-purple-400' },
-          { label: 'COMPOSURE & PACE', score: report.metrics?.composure || 0, color: 'text-emerald-400', bar: 'bg-emerald-400' },
+          { label: 'TECHNICAL DEPTH', score: report.metrics?.technicalDepth || 0, color: 'text-indigo-600', bar: 'bg-indigo-600' },
+          { label: 'PROBLEM SOLVING', score: report.metrics?.problemSolving || 0, color: 'text-blue-600', bar: 'bg-blue-600' },
+          { label: 'COMMUNICATION', score: report.metrics?.communication || 0, color: 'text-purple-600', bar: 'bg-purple-600' },
+          { label: 'COMPOSURE & PACE', score: report.metrics?.composure || 0, color: 'text-emerald-600', bar: 'bg-emerald-600' },
         ].map((item, idx) => (
-          <div key={idx} className="bg-[#0b1324] border border-[#17233f] rounded-2xl p-4 text-center space-y-1.5 shadow-md">
-            <span className="block text-[9px] font-mono font-bold text-slate-400 tracking-wider uppercase">{item.label}</span>
-            <span className={`font-mono font-black text-3xl ${item.color} block`}>{item.score}%</span>
-            <div className="w-full bg-[#121c33] rounded-full h-1.5 mt-2 overflow-hidden">
+          <div key={idx} className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-4 text-center space-y-1.5 shadow-md shadow-indigo-900/5">
+            <span className="block text-[9px] font-bold text-slate-500 tracking-wider uppercase">{item.label}</span>
+            <span className={`font-black text-3xl ${item.color} block`}>{item.score}%</span>
+            <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
               <div className={`${item.bar} h-1.5 rounded-full transition-all duration-700`} style={{ width: `${item.score}%` }} />
             </div>
           </div>
@@ -146,41 +148,41 @@ ${(report.areasForGrowth || []).map(g => `• ${g}`).join('\n')}
       </div>
 
       {/* MediaPipe Vision & Biometric Section */}
-      <div className="bg-[#0b1324] border border-[#17233f] rounded-2xl p-6 space-y-4 shadow-md">
-        <div className="flex items-center justify-between border-b border-[#141e36] pb-3">
-          <span className="text-xs font-mono font-bold text-cyan-300 flex items-center gap-2">
-            <Eye size={15} className="text-cyan-400" />
+      <div className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-6 space-y-4 shadow-md shadow-indigo-900/5">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <span className="text-xs font-bold text-indigo-700 flex items-center gap-2">
+            <Eye size={15} className="text-indigo-600" />
             <span>MEDIAPIPE EYE TRACKING & BODY POSTURE BIOMETRICS</span>
           </span>
-          <span className="text-[10px] font-mono text-slate-400 bg-[#0e172e] px-2.5 py-0.5 rounded-full border border-[#182645]">
+          <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
             Vision Engine Synced
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono">
-          <div className="p-3.5 bg-[#0e172e] border border-[#182645] rounded-xl space-y-1">
-            <span className="text-[10px] text-slate-400 uppercase block">Eye Contact Focus</span>
-            <span className="text-xl font-bold text-cyan-300">{biometrics.eyeContactPercentage}%</span>
-            <span className="text-[10px] text-slate-400 block">{biometrics.gazeQuality} screen engagement</span>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div className="p-4 bg-[#f8faff] border border-indigo-100 rounded-2xl space-y-1">
+            <span className="text-[10px] text-slate-500 uppercase font-bold block">Eye Contact Focus</span>
+            <span className="text-2xl font-black text-indigo-600">{biometrics.eyeContactPercentage}%</span>
+            <span className="text-[11px] text-slate-600 block font-medium">{biometrics.gazeQuality} screen engagement</span>
           </div>
 
-          <div className="p-3.5 bg-[#0e172e] border border-[#182645] rounded-xl space-y-1">
-            <span className="text-[10px] text-slate-400 uppercase block">Posture Composure</span>
-            <span className="text-xl font-bold text-purple-300">{biometrics.averageComposureScore}/100</span>
-            <span className="text-[10px] text-slate-400 block">Upright & calm delivery</span>
+          <div className="p-4 bg-[#faf5ff] border border-purple-100 rounded-2xl space-y-1">
+            <span className="text-[10px] text-slate-500 uppercase font-bold block">Posture Composure</span>
+            <span className="text-2xl font-black text-purple-600">{biometrics.averageComposureScore}/100</span>
+            <span className="text-[11px] text-slate-600 block font-medium">Upright & calm delivery</span>
           </div>
 
-          <div className="p-3.5 bg-[#0e172e] border border-[#182645] rounded-xl space-y-1">
-            <span className="text-[10px] text-slate-400 uppercase block">Movement Index</span>
-            <span className="text-xl font-bold text-emerald-300">{biometrics.fidgetIndex}</span>
-            <span className="text-[10px] text-slate-400 block">Natural body language</span>
+          <div className="p-4 bg-[#f0fdf4] border border-emerald-100 rounded-2xl space-y-1">
+            <span className="text-[10px] text-slate-500 uppercase font-bold block">Movement Index</span>
+            <span className="text-2xl font-black text-emerald-600">{biometrics.fidgetIndex}</span>
+            <span className="text-[11px] text-slate-600 block font-medium">Natural body language</span>
           </div>
         </div>
 
         <div className="space-y-1.5 pt-1">
           {(biometrics.observations || []).map((obs, idx) => (
-            <div key={idx} className="p-2.5 bg-[#09101f] border border-[#14203a] rounded-xl text-xs text-slate-300 flex items-start gap-2">
-              <span className="text-cyan-400 font-bold">•</span>
+            <div key={idx} className="p-3 bg-[#f8faff] border border-indigo-50 rounded-xl text-xs text-slate-700 flex items-start gap-2.5">
+              <span className="text-indigo-600 font-bold">•</span>
               <span>{obs}</span>
             </div>
           ))}
@@ -189,30 +191,30 @@ ${(report.areasForGrowth || []).map(g => `• ${g}`).join('\n')}
 
       {/* Strengths & Targeted Growth Areas */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="bg-[#0b1324] border border-[#17233f] rounded-2xl p-6 space-y-3 shadow-md">
-          <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-2">
+        <div className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-6 space-y-3 shadow-md shadow-indigo-900/5">
+          <span className="text-xs font-bold text-emerald-700 flex items-center gap-2">
             <CheckCircle2 size={15} />
             <span>Validated Strengths</span>
           </span>
-          <div className="space-y-2 text-xs text-slate-300">
+          <div className="space-y-2 text-xs text-slate-700">
             {(report.keyStrengths || []).map((s, idx) => (
-              <div key={idx} className="p-3 bg-[#0e172e] border border-[#182645] rounded-xl flex items-start gap-2.5">
-                <span className="text-emerald-400 font-bold">•</span>
+              <div key={idx} className="p-3 bg-[#f0fdf4] border border-emerald-100 rounded-2xl flex items-start gap-2.5">
+                <span className="text-emerald-600 font-bold">•</span>
                 <span>{s}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-[#0b1324] border border-[#17233f] rounded-2xl p-6 space-y-3 shadow-md">
-          <span className="text-xs font-mono font-bold text-cyan-400 flex items-center gap-2">
+        <div className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-6 space-y-3 shadow-md shadow-indigo-900/5">
+          <span className="text-xs font-bold text-blue-700 flex items-center gap-2">
             <TrendingUp size={15} />
             <span>Targeted Growth Areas</span>
           </span>
-          <div className="space-y-2 text-xs text-slate-300">
+          <div className="space-y-2 text-xs text-slate-700">
             {(report.areasForGrowth || []).map((g, idx) => (
-              <div key={idx} className="p-3 bg-[#0e172e] border border-[#182645] rounded-xl flex items-start gap-2.5">
-                <span className="text-cyan-400 font-bold">•</span>
+              <div key={idx} className="p-3 bg-[#eff6ff] border border-blue-100 rounded-2xl flex items-start gap-2.5">
+                <span className="text-blue-600 font-bold">•</span>
                 <span>{g}</span>
               </div>
             ))}
@@ -224,7 +226,7 @@ ${(report.areasForGrowth || []).map(g => `• ${g}`).join('\n')}
       <div className="flex items-center justify-between pt-2">
         <button
           onClick={onBackToDashboard}
-          className="px-5 py-2.5 bg-[#0c1427] hover:bg-[#121e3a] border border-[#192849] rounded-xl font-mono text-xs font-bold text-slate-300 flex items-center gap-2 transition-all"
+          className="px-6 py-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 flex items-center gap-2 transition-all shadow-sm"
         >
           <ArrowLeft size={14} />
           <span>Back to Dashboard</span>
@@ -232,7 +234,7 @@ ${(report.areasForGrowth || []).map(g => `• ${g}`).join('\n')}
 
         <button
           onClick={handleExportTxt}
-          className="px-5 py-2.5 bg-[#d8b4fe] hover:bg-[#c084fc] text-[#0f172a] rounded-xl font-mono text-xs font-black tracking-wider flex items-center gap-2 transition-all shadow-md shadow-purple-950/40"
+          className="px-6 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 hover:from-indigo-700 hover:via-purple-700 hover:to-blue-700 text-white rounded-2xl text-xs font-black tracking-wider flex items-center gap-2 transition-all shadow-lg shadow-indigo-500/25 active:scale-95"
         >
           <Download size={14} />
           <span>Export Scorecard (.txt)</span>

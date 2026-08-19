@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../context/ThemeContext';
 import { useInterview } from '../context/InterviewContext';
-import { Settings, Key, Volume2, Moon, Sun, Save, CheckCircle2 } from 'lucide-react';
+import { Settings, Key, Volume2, Save, CheckCircle2 } from 'lucide-react';
 
 export default function SettingsView() {
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);
-  const { isDark, toggleTheme } = useTheme();
   const { speechRate, setSpeechRate } = useInterview();
 
   useEffect(() => {
@@ -26,38 +24,38 @@ export default function SettingsView() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-200">
       
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center">
+      <div className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-6 md:p-8 shadow-xl shadow-indigo-900/5">
+        <div className="flex items-center gap-3.5 mb-2">
+          <div className="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-purple-600 text-white rounded-2xl flex items-center justify-center shadow-md shadow-indigo-500/20">
             <Settings size={22} />
           </div>
           <div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-white">Platform Settings & API Keys</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Configure your AI models, speech synthesis rate, and platform preferences.
+            <h2 className="text-2xl font-extrabold text-slate-900">Platform Settings</h2>
+            <p className="text-xs text-slate-500 font-normal">
+              Configure your custom AI model keys, speech synthesis rate, and platform preferences.
             </p>
           </div>
         </div>
       </div>
 
       {savedSuccess && (
-        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2 animate-in fade-in duration-200">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs font-bold text-emerald-700 flex items-center gap-2 animate-in fade-in duration-200 shadow-sm">
           <CheckCircle2 size={16} />
           <span>Settings saved successfully!</span>
         </div>
       )}
 
       {/* API Key Form */}
-      <form onSubmit={handleSave} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+      <form onSubmit={handleSave} className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-6 md:p-8 space-y-4 shadow-xl shadow-indigo-900/5">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
             <Key size={16} className="text-indigo-600" />
             <span>Custom LLM API Key (OpenRouter / OpenAI / Gemini)</span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          <p className="text-xs text-slate-500 leading-relaxed font-normal">
             By default, the server uses your configured environment keys. You can override it here with your own key for testing.
           </p>
         </div>
@@ -67,13 +65,13 @@ export default function SettingsView() {
           value={apiKeyInput}
           onChange={(e) => setApiKeyInput(e.target.value)}
           placeholder="sk-or-v1-... or sk-..."
-          className="w-full p-3.5 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 transition-all"
+          className="w-full p-3.5 border border-indigo-100 rounded-2xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 font-mono text-xs text-slate-900 bg-[#f8faff] transition-all"
         />
 
         <div className="pt-2 flex justify-end">
           <button
             type="submit"
-            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs transition-all shadow-md shadow-indigo-500/20"
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 hover:from-indigo-700 hover:via-purple-700 hover:to-blue-700 text-white rounded-2xl font-bold text-xs transition-all shadow-lg shadow-indigo-500/25 active:scale-95"
           >
             <Save size={14} />
             <span>Save Preferences</span>
@@ -81,17 +79,15 @@ export default function SettingsView() {
         </div>
       </form>
 
-      {/* Voice & Theme Preferences */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-6 shadow-sm">
-        
-        {/* Speech Rate Slider */}
+      {/* Voice Preferences */}
+      <div className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-6 md:p-8 space-y-6 shadow-xl shadow-indigo-900/5">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+            <div className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
               <Volume2 size={16} className="text-indigo-600" />
               <span>AI Voice Speech Rate</span>
             </div>
-            <span className="font-mono font-bold text-xs text-indigo-600 dark:text-indigo-400">
+            <span className="font-mono font-bold text-xs text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
               {speechRate}x
             </span>
           </div>
@@ -105,22 +101,6 @@ export default function SettingsView() {
             className="w-full accent-indigo-600 cursor-pointer"
           />
         </div>
-
-        {/* Theme Toggle */}
-        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
-            {isDark ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} className="text-indigo-600" />}
-            <span>Interface Theme</span>
-          </div>
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-bold text-xs transition-all"
-          >
-            Switch to {isDark ? 'Light' : 'Dark'} Mode
-          </button>
-        </div>
-
       </div>
 
     </div>

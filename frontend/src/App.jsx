@@ -18,10 +18,10 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#070b14]">
-        <div className="flex items-center gap-3 text-indigo-400 font-bold text-sm">
-          <span className="w-3 h-3 rounded-full bg-indigo-500 animate-ping"></span>
-          <span>Initializing Vivora AI Platform Core...</span>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#f8faff] via-[#eef4ff] to-[#f3efff]">
+        <div className="flex items-center gap-3 text-indigo-600 font-bold text-sm bg-white/80 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-xl border border-indigo-100">
+          <span className="w-3 h-3 rounded-full bg-indigo-600 animate-ping"></span>
+          <span>Initializing Vivora AI Platform...</span>
         </div>
       </div>
     );
@@ -50,7 +50,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#070b14] text-slate-100 antialiased">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f8faff] via-[#eef4ff] to-[#f4f0ff] text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
       
       {/* Top Navbar */}
       <Navbar currentView={currentView} setCurrentView={setCurrentView} />
