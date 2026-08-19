@@ -18,8 +18,8 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#f8faff] via-[#eef4ff] to-[#f3efff]">
-        <div className="flex items-center gap-3 text-indigo-600 font-bold text-sm bg-white/80 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-xl border border-indigo-100">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#f8faff] via-[#eef4ff] to-[#f3efff] dark:from-[#070b14] dark:via-[#0c1427] dark:to-[#090d1a]">
+        <div className="flex items-center gap-3 text-indigo-600 dark:text-indigo-400 font-bold text-sm bg-white/80 dark:bg-[#0e172e]/80 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-xl border border-indigo-100 dark:border-[#1c2c54]">
           <span className="w-3 h-3 rounded-full bg-indigo-600 animate-ping"></span>
           <span>Initializing Vivora AI Platform...</span>
         </div>
@@ -50,7 +50,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f8faff] via-[#eef4ff] to-[#f4f0ff] text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f8faff] via-[#eef4ff] to-[#f4f0ff] dark:from-[#070b14] dark:via-[#091024] dark:to-[#080d1e] text-slate-800 dark:text-slate-100 antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-200">
       
       {/* Top Navbar */}
       <Navbar currentView={currentView} setCurrentView={setCurrentView} />

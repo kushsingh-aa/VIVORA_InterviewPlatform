@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useInterview, SENIORITY_INFO } from '../context/InterviewContext';
-import { Terminal, Database, TrendingUp, Users, ArrowRight, ShieldCheck, Zap, Activity, Cpu, Sparkles, ChevronRight } from 'lucide-react';
+import { Terminal, Database, TrendingUp, Users, ShieldCheck, Activity, Cpu, Sparkles, ChevronRight } from 'lucide-react';
 
 export default function DashboardView({ onStartInterview }) {
   const { user } = useAuth();
@@ -16,9 +16,9 @@ export default function DashboardView({ onStartInterview }) {
       badge: 'Distributed Systems',
       desc: 'Systematic diagnosis of 10x traffic spikes, distributed locking (Redlock), multi-tier cache stampede isolation, and circuit breaker patterns.',
       icon: Terminal,
-      iconColor: 'text-indigo-600',
-      iconBg: 'bg-indigo-50 border-indigo-100',
-      hoverGradient: 'hover:border-indigo-300 hover:shadow-indigo-500/10'
+      iconColor: 'text-indigo-600 dark:text-indigo-400',
+      iconBg: 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-100 dark:border-indigo-900/60',
+      hoverGradient: 'hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:shadow-indigo-500/10'
     },
     {
       id: 'system_design',
@@ -26,9 +26,9 @@ export default function DashboardView({ onStartInterview }) {
       badge: 'Planetary Scale',
       desc: 'Architecting multi-region active-active clusters, conflict-free replicated data types (CRDTs), high-throughput event streaming, and strict SLAs.',
       icon: Database,
-      iconColor: 'text-blue-600',
-      iconBg: 'bg-blue-50 border-blue-100',
-      hoverGradient: 'hover:border-blue-300 hover:shadow-blue-500/10'
+      iconColor: 'text-blue-600 dark:text-cyan-400',
+      iconBg: 'bg-blue-50 dark:bg-cyan-950/60 border-blue-100 dark:border-cyan-900/60',
+      hoverGradient: 'hover:border-blue-300 dark:hover:border-cyan-500/50 hover:shadow-blue-500/10'
     },
     {
       id: 'product',
@@ -36,9 +36,9 @@ export default function DashboardView({ onStartInterview }) {
       badge: 'Strategy & GTM',
       desc: 'Diagnosing retention funnel degradation, RICE scoring matrix prioritization, North Star metric mapping, and cross-functional trade-offs.',
       icon: TrendingUp,
-      iconColor: 'text-purple-600',
-      iconBg: 'bg-purple-50 border-purple-100',
-      hoverGradient: 'hover:border-purple-300 hover:shadow-purple-500/10'
+      iconColor: 'text-purple-600 dark:text-purple-400',
+      iconBg: 'bg-purple-50 dark:bg-purple-950/60 border-purple-100 dark:border-purple-900/60',
+      hoverGradient: 'hover:border-purple-300 dark:hover:border-purple-500/50 hover:shadow-purple-500/10'
     },
     {
       id: 'behavioral',
@@ -46,9 +46,9 @@ export default function DashboardView({ onStartInterview }) {
       badge: 'Executive EQ & STAR',
       desc: 'Leadership in high-stakes production crises, cross-organizational alignment, post-mortem retrospectives, and navigating conflict under pressure.',
       icon: Users,
-      iconColor: 'text-sky-600',
-      iconBg: 'bg-sky-50 border-sky-100',
-      hoverGradient: 'hover:border-sky-300 hover:shadow-sky-500/10'
+      iconColor: 'text-sky-600 dark:text-sky-400',
+      iconBg: 'bg-sky-50 dark:bg-sky-950/60 border-sky-100 dark:border-sky-900/60',
+      hoverGradient: 'hover:border-sky-300 dark:hover:border-sky-500/50 hover:shadow-sky-500/10'
     }
   ];
 
@@ -62,66 +62,66 @@ export default function DashboardView({ onStartInterview }) {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       
-      {/* Hero Welcome Banner with White / Light Blue / Purple Fade */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-[#f0f5ff] to-[#f5f0ff] border border-indigo-100/80 p-8 md:p-12 shadow-xl shadow-indigo-900/5">
+      {/* Hero Welcome Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-[#f0f5ff] to-[#f5f0ff] dark:from-[#0b1326] dark:via-[#0e172e] dark:to-[#12142d] border border-indigo-100/80 dark:border-[#192a50] p-8 md:p-12 shadow-xl shadow-indigo-900/5 dark:shadow-indigo-950/30 transition-colors">
         
         {/* Soft Ambient Glow Orbs */}
-        <div className="absolute -right-16 -top-16 w-96 h-96 bg-gradient-to-br from-purple-200/40 to-blue-200/40 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -left-10 bottom-0 w-80 h-80 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -right-16 -top-16 w-96 h-96 bg-gradient-to-br from-purple-200/40 to-blue-200/40 dark:from-purple-900/20 dark:to-blue-900/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -left-10 bottom-0 w-80 h-80 bg-indigo-200/30 dark:from-indigo-900/20 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
           <div className="lg:col-span-8 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-indigo-200/80 rounded-full text-xs font-bold text-indigo-700 shadow-sm">
-              <Sparkles size={14} className="text-purple-600" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#131f3b] border border-indigo-200/80 dark:border-indigo-800/60 rounded-full text-xs font-bold text-indigo-700 dark:text-indigo-300 shadow-sm">
+              <Sparkles size={14} className="text-purple-600 dark:text-amber-400" />
               <span>Next-Gen Autonomous AI Technical Assessment</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.15] text-slate-900">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.15] text-slate-900 dark:text-white">
               Master Technical Interviews with{' '}
               <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
                 Adaptive AI Dialogue
               </span>
             </h1>
 
-            <p className="text-slate-600 text-sm md:text-base font-normal max-w-2xl leading-relaxed">
+            <p className="text-slate-600 dark:text-slate-300 text-sm md:text-base font-normal max-w-2xl leading-relaxed">
               Experience dynamic multi-turn technical assessments with real-time MediaPipe Eye Tracking, Posture Biometrics, live speech synthesis, and rigorous rubric scoring.
             </p>
 
-            <div className="pt-2 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-700">
-              <span className="flex items-center gap-1.5 bg-white border border-indigo-100 px-3.5 py-2 rounded-2xl shadow-sm">
-                <Cpu size={14} className="text-indigo-600" /> GPT-4o-Mini Engine
+            <div className="pt-2 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <span className="flex items-center gap-1.5 bg-white dark:bg-[#0e172e] border border-indigo-100 dark:border-[#192a50] px-3.5 py-2 rounded-2xl shadow-sm">
+                <Cpu size={14} className="text-indigo-600 dark:text-indigo-400" /> GPT-4o-Mini Engine
               </span>
-              <span className="flex items-center gap-1.5 bg-white border border-indigo-100 px-3.5 py-2 rounded-2xl shadow-sm">
-                <Activity size={14} className="text-purple-600" /> MediaPipe Eye & Posture
+              <span className="flex items-center gap-1.5 bg-white dark:bg-[#0e172e] border border-indigo-100 dark:border-[#192a50] px-3.5 py-2 rounded-2xl shadow-sm">
+                <Activity size={14} className="text-purple-600 dark:text-purple-400" /> MediaPipe Eye & Posture
               </span>
-              <span className="flex items-center gap-1.5 bg-white border border-indigo-100 px-3.5 py-2 rounded-2xl shadow-sm">
-                <ShieldCheck size={14} className="text-blue-600" /> MongoDB Atlas Cloud
+              <span className="flex items-center gap-1.5 bg-white dark:bg-[#0e172e] border border-indigo-100 dark:border-[#192a50] px-3.5 py-2 rounded-2xl shadow-sm">
+                <ShieldCheck size={14} className="text-blue-600 dark:text-cyan-400" /> MongoDB Atlas Cloud
               </span>
             </div>
           </div>
 
           {/* Quick Metrics Capsule */}
-          <div className="lg:col-span-4 bg-white/90 backdrop-blur-xl border border-indigo-100 rounded-3xl p-6 space-y-4 shadow-lg shadow-indigo-900/5">
-            <div className="flex items-center justify-between border-b border-indigo-50 pb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Candidate Session</span>
-              <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-extrabold rounded-full uppercase">
+          <div className="lg:col-span-4 bg-white/90 dark:bg-[#0c1427]/90 backdrop-blur-xl border border-indigo-100 dark:border-[#17233f] rounded-3xl p-6 space-y-4 shadow-lg shadow-indigo-900/5">
+            <div className="flex items-center justify-between border-b border-indigo-50 dark:border-[#17233f] pb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Candidate Session</span>
+              <span className="px-2.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-extrabold rounded-full uppercase">
                 Active & Ready
               </span>
             </div>
 
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between">
-                <span className="text-slate-500">Candidate:</span>
-                <span className="font-bold text-slate-900 truncate">{user?.name || 'Candidate'}</span>
+                <span className="text-slate-500 dark:text-slate-400">Candidate:</span>
+                <span className="font-bold text-slate-900 dark:text-white truncate">{user?.name || 'Candidate'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Target Seniority:</span>
-                <span className="font-bold text-indigo-600">{selectedDifficulty} Level</span>
+                <span className="text-slate-500 dark:text-slate-400">Target Seniority:</span>
+                <span className="font-bold text-indigo-600 dark:text-indigo-400">{selectedDifficulty} Level</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Completed Sessions:</span>
-                <span className="font-bold text-purple-600">{historyArchive.length} scorecards</span>
+                <span className="text-slate-500 dark:text-slate-400">Completed Sessions:</span>
+                <span className="font-bold text-purple-600 dark:text-purple-400">{historyArchive.length} scorecards</span>
               </div>
             </div>
           </div>
@@ -130,26 +130,26 @@ export default function DashboardView({ onStartInterview }) {
       </div>
 
       {/* Seniority Calibration Deck */}
-      <div className="bg-white/85 backdrop-blur-xl border border-indigo-100 rounded-3xl p-6 md:p-8 space-y-5 shadow-lg shadow-indigo-900/5">
+      <div className="bg-white/85 dark:bg-[#0b1326]/85 backdrop-blur-xl border border-indigo-100 dark:border-[#162340] rounded-3xl p-6 md:p-8 space-y-5 shadow-lg shadow-indigo-900/5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
-            <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-              <span className="text-indigo-600">🎯</span>
+            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="text-indigo-600 dark:text-indigo-400">🎯</span>
               <span>Calibrate Assessment Seniority</span>
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Questions, failure domain probes, and rubric criteria adapt dynamically to your selected career tier.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 text-xs font-semibold text-slate-600">
+          <div className="flex items-center gap-3 text-xs font-semibold text-slate-600 dark:text-slate-300">
             <span>⏱️ <strong>6 Rapid Turns</strong></span>
             <span>•</span>
             <span>🎙️ <strong>Voice Enabled</strong></span>
           </div>
         </div>
 
-        {/* 4 Tier Buttons with Purple-to-Blue Fades */}
+        {/* 4 Tier Buttons */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { id: 'Junior', label: 'Junior', sub: '0-2 YOE', desc: 'Fundamentals & CRUD' },
@@ -166,18 +166,18 @@ export default function DashboardView({ onStartInterview }) {
                 className={`p-4 rounded-2xl text-left border transition-all ${
                   isSelected
                     ? 'bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white border-transparent shadow-lg shadow-indigo-500/30 scale-[1.02]'
-                    : 'bg-[#f8faff] hover:bg-[#edf2fe] text-slate-700 border-indigo-100 hover:border-indigo-200'
+                    : 'bg-[#f8faff] dark:bg-[#0e172e] hover:bg-[#edf2fe] dark:hover:bg-[#131f3d] text-slate-700 dark:text-slate-300 border-indigo-100 dark:border-[#192849]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-extrabold text-sm">{tier.label}</span>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-white text-indigo-700 border border-indigo-100 shadow-sm'
+                    isSelected ? 'bg-white/20 text-white' : 'bg-white dark:bg-[#152240] text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/60 shadow-sm'
                   }`}>
                     {tier.sub}
                   </span>
                 </div>
-                <p className={`text-xs ${isSelected ? 'text-indigo-100' : 'text-slate-500'}`}>
+                <p className={`text-xs ${isSelected ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400'}`}>
                   {tier.desc}
                 </p>
               </button>
@@ -186,10 +186,10 @@ export default function DashboardView({ onStartInterview }) {
         </div>
 
         {/* Scope Detail Card */}
-        <div className="p-4 bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 border border-indigo-100 rounded-2xl text-xs flex items-center justify-between gap-4">
+        <div className="p-4 bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-blue-950/30 border border-indigo-100 dark:border-indigo-900/60 rounded-2xl text-xs flex items-center justify-between gap-4">
           <div className="space-y-0.5">
-            <span className="font-extrabold text-indigo-900">{seniorityData.title}</span>
-            <p className="text-slate-600 leading-relaxed font-normal">{seniorityData.desc}</p>
+            <span className="font-extrabold text-indigo-900 dark:text-indigo-300">{seniorityData.title}</span>
+            <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-normal">{seniorityData.desc}</p>
           </div>
           <span className="px-3 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-[10px] uppercase tracking-wider rounded-xl shrink-0 shadow-sm">
             Active Rubric
@@ -200,8 +200,8 @@ export default function DashboardView({ onStartInterview }) {
       {/* Assessment Tracks Grid */}
       <div className="space-y-4">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900">Choose Interview Track</h2>
-          <p className="text-xs text-slate-500">Select a technical vertical to launch your live assessment session.</p>
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Choose Interview Track</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Select a technical vertical to launch your live assessment session.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -212,29 +212,29 @@ export default function DashboardView({ onStartInterview }) {
               <div
                 key={track.id}
                 onClick={() => handleTrackSelect(track.id)}
-                className={`group bg-white/90 backdrop-blur-xl border border-indigo-100 rounded-3xl p-7 cursor-pointer transition-all duration-300 shadow-md shadow-indigo-900/5 hover:shadow-xl hover:-translate-y-1 space-y-4 ${track.hoverGradient}`}
+                className={`group bg-white/90 dark:bg-[#0b1326]/90 backdrop-blur-xl border border-indigo-100 dark:border-[#162340] rounded-3xl p-7 cursor-pointer transition-all duration-300 shadow-md shadow-indigo-900/5 hover:shadow-xl hover:-translate-y-1 space-y-4 ${track.hoverGradient}`}
               >
                 <div className="flex items-start justify-between">
                   <div className={`w-14 h-14 rounded-2xl ${track.iconBg} border flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm`}>
                     <Icon size={26} className={track.iconColor} />
                   </div>
-                  <span className="px-3.5 py-1 bg-indigo-50/80 border border-indigo-100 text-indigo-700 rounded-full text-xs font-bold shadow-sm">
+                  <span className="px-3.5 py-1 bg-indigo-50/80 dark:bg-[#0e172e] border border-indigo-100 dark:border-[#192849] text-indigo-700 dark:text-indigo-300 rounded-full text-xs font-bold shadow-sm">
                     {track.badge}
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  <h3 className="text-lg font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                  <h3 className="text-lg font-extrabold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                     {track.title}
                   </h3>
-                  <p className="text-xs text-slate-500 font-normal leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
                     {track.desc}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-indigo-600">
+                <div className="pt-3 border-t border-slate-100 dark:border-[#141f38] flex items-center justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
                   <span>Launch Assessment Chamber</span>
-                  <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:translate-x-1 group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-purple-600 group-hover:text-white transition-all shadow-sm">
+                  <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-[#0e172e] text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:translate-x-1 group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-purple-600 group-hover:text-white transition-all shadow-sm">
                     <ChevronRight size={16} />
                   </div>
                 </div>
