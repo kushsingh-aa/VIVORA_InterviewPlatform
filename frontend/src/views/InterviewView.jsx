@@ -11,10 +11,18 @@ export default function InterviewView({ onConclude }) {
   const { endSession } = useInterview();
 
   const handleEndInterview = async () => {
-    if (window.confirm('Conclude the current assessment simulation and compile telemetry scorecard?')) {
+    try {
       const report = await endSession();
       if (onConclude) {
         onConclude(report);
+      }
+    } catch (err) {
+      if (onConclude) {
+        onConclude({
+          overallScore: 0,
+          recommendation: 'Incomplete',
+          executiveSummary: 'Assessment chamber concluded.'
+        });
       }
     }
   };
@@ -26,7 +34,7 @@ export default function InterviewView({ onConclude }) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4 relative animate-in fade-in duration-300">
+    <div className="max-w-7xl mx-auto space-y-4 relative animate-in fade-in duration-200">
       
       {/* Top Persona & Timer Header */}
       <PersonaHeader onEndInterview={handleEndInterview} />
@@ -44,7 +52,7 @@ export default function InterviewView({ onConclude }) {
         </div>
 
         {/* Right Column: Telemetry & Video HUD (5 Cols) */}
-        <div className="lg:col-span-5 sticky top-4">
+        <div className="lg:col-span-5 sticky top-20">
           <TelemetryHUD />
         </div>
 

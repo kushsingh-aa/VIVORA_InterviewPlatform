@@ -293,15 +293,28 @@ export function InterviewProvider({ children }) {
     cancelSpeech();
 
     if (activeSession) {
-      setActiveSession(prev => ({ ...prev, status: 'completed' }));
+      const sessId = activeSession.sessionId;
+      setActiveSession(null); // Clear active session immediately so chamber closes
+
       try {
-        const res = await api.post('/interview/complete', { sessionId: activeSession.sessionId });
-        if (res.data?.report) {
-          setFinalReport(res.data.report);
-          loadHistory();
-          return res.data.report;
-        }
-      } catch (err) {}
+        const res = await api.post('/interview/complete', { sessionId: sessId });
+        const report = res.data?.report || {
+          overallScore: 0,
+          recommendation: 'Incomplete / Concluded Early',
+          executiveSummary: 'Assessment chamber was concluded early.'
+        };
+        setFinalReport(report);
+        loadHistory();
+        return report;
+      } catch (err) {
+        const fallbackReport = {
+          overallScore: 0,
+          recommendation: 'Incomplete / Concluded Early',
+          executiveSummary: 'Assessment chamber was concluded early.'
+        };
+        setFinalReport(fallbackReport);
+        return fallbackReport;
+      }
     }
     return null;
   };
