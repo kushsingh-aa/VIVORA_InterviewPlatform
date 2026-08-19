@@ -2,127 +2,141 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useInterview } from '../../context/InterviewContext';
-import { Moon, Sun, Bot, LogOut, Sparkles, Volume2, VolumeX, ShieldCheck } from 'lucide-react';
+import { Moon, Sun, LogOut, Volume2, VolumeX, ShieldCheck, Sparkles, LayoutDashboard, Radio, Award, History, Settings, Info } from 'lucide-react';
 
 export default function Navbar({ currentView, setCurrentView }) {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
-  const { aiStatus, isSpeaking, voiceEnabled, toggleVoice } = useInterview();
+  const { aiStatus, isSpeaking, voiceEnabled, toggleVoice, activeSession } = useInterview();
   const [showDropdown, setShowDropdown] = useState(false);
 
+  const navTabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'interview', label: 'Live Interview', icon: Radio, badge: activeSession ? 'ACTIVE' : null, disabled: !activeSession },
+    { id: 'complete', label: 'Scorecards', icon: Award },
+    { id: 'analytics', label: 'History', icon: History },
+    { id: 'about', label: 'About', icon: Info },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
+
   return (
-    <header className="sticky top-0 z-40 bg-white/90 dark:bg-[#070b14]/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-[#141d33] transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-50 bg-[#070c18]/90 backdrop-blur-xl border-b border-[#141f38] transition-colors select-none">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         
         {/* Left Branding */}
         <div 
           onClick={() => setCurrentView('dashboard')}
-          className="flex items-center gap-3 cursor-pointer group select-none"
+          className="flex items-center gap-3 cursor-pointer group"
         >
-          <div className="relative">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 text-white rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform">
-              🤖
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 p-[1.5px] shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+            <div className="w-full h-full rounded-[10px] bg-[#090e1c] flex items-center justify-center font-bold text-white text-base">
+              V
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-[#070b14] rounded-full animate-pulse"></span>
           </div>
 
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-lg tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-600 dark:from-white dark:via-slate-200 dark:to-indigo-300 bg-clip-text text-transparent">
-                VIVORA
-              </span>
-              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-sm">
-                AI
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-400 font-bold tracking-wider uppercase">
-              Assessment Portal
-            </p>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-extrabold text-lg tracking-tight text-white">
+              VIVORA
+            </span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 border border-indigo-500/30 text-indigo-300">
+              AI
+            </span>
           </div>
         </div>
 
-        {/* Center Live AI Status Pill */}
-        <div className="hidden md:flex items-center gap-3 px-3.5 py-1.5 bg-slate-100/80 dark:bg-[#0c1427] border border-slate-200 dark:border-[#17233f] rounded-full text-xs font-semibold backdrop-blur-md shadow-inner">
-          <div className="flex items-center gap-1.5">
+        {/* Center Primary Nav Tabs */}
+        <nav className="hidden md:flex items-center gap-1 bg-[#0b1326] border border-[#162444] p-1 rounded-2xl">
+          {navTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = currentView === tab.id;
+
+            return (
+              <button
+                key={tab.id}
+                disabled={tab.disabled}
+                onClick={() => setCurrentView(tab.id)}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  isActive
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                    : tab.disabled
+                    ? 'opacity-40 cursor-not-allowed text-slate-500'
+                    : 'text-slate-400 hover:text-white hover:bg-[#121d38]'
+                }`}
+              >
+                <Icon size={14} />
+                <span>{tab.label}</span>
+                {tab.badge && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Right System Indicators & Profile */}
+        <div className="flex items-center gap-2.5">
+          
+          {/* Status Capsule */}
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-[#0b1326] border border-[#162444] rounded-xl text-xs">
             {isSpeaking ? (
-              <div className="flex items-center gap-0.5 h-4">
-                <span className="live-bar"></span>
-                <span className="live-bar"></span>
+              <div className="flex items-center gap-0.5 h-3.5">
                 <span className="live-bar"></span>
                 <span className="live-bar"></span>
                 <span className="live-bar"></span>
               </div>
             ) : (
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             )}
-            <span className="text-slate-500 dark:text-slate-400 text-[11px]">AI Core:</span>
-            <span className="text-indigo-600 dark:text-indigo-400 font-bold">{aiStatus}</span>
+            <span className="text-slate-400 text-[11px]">Core:</span>
+            <span className="text-indigo-300 font-bold text-[11px]">{aiStatus}</span>
           </div>
 
-          <span className="text-slate-300 dark:text-slate-700">|</span>
-          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-            <ShieldCheck size={13} /> MongoDB Atlas
-          </span>
-        </div>
-
-        {/* Right Action Icons */}
-        <div className="flex items-center gap-2">
-          
           {/* Voice Toggle */}
           <button
             onClick={toggleVoice}
-            className={`p-2.5 rounded-xl border transition-all ${
+            className={`p-2 rounded-xl border transition-all ${
               voiceEnabled 
-                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/80 shadow-sm'
-                : 'bg-slate-100 dark:bg-[#0c1427] text-slate-400 border-slate-200 dark:border-[#17233f]'
+                ? 'bg-indigo-950/60 text-indigo-300 border-indigo-800 shadow-sm'
+                : 'bg-[#0b1326] text-slate-400 border-[#162444]'
             }`}
-            title={voiceEnabled ? 'AI Voice Enabled (Click to Mute)' : 'AI Voice Muted (Click to Enable)'}
+            title={voiceEnabled ? 'Voice Synthesis Enabled' : 'Voice Muted'}
           >
             {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-          </button>
-
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-xl bg-slate-100 dark:bg-[#0c1427] border border-slate-200 dark:border-[#17233f] text-slate-600 dark:text-slate-300 hover:text-indigo-600 transition-colors"
-            title="Toggle theme"
-          >
-            {isDark ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} />}
           </button>
 
           {/* User Profile */}
           <div className="relative">
             <button
               onClick={() => setShowDropdown(prev => !prev)}
-              className="flex items-center gap-2 pl-2 pr-3 py-1.5 bg-gradient-to-r from-slate-100 to-indigo-50/50 dark:from-[#0c1427] dark:to-indigo-950/40 hover:border-indigo-500/50 rounded-xl transition-all text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#17233f] shadow-sm"
+              className="flex items-center gap-2 pl-2 pr-3 py-1.5 bg-[#0b1326] hover:bg-[#121d38] border border-[#162444] hover:border-indigo-500/50 rounded-xl transition-all text-xs font-semibold text-slate-200 shadow-sm"
             >
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-xs font-black shadow-inner">
-                {user?.name ? user.name[0].toUpperCase() : 'U'}
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-xs font-bold">
+                {user?.name ? user.name[0].toUpperCase() : 'C'}
               </div>
-              <span className="hidden md:inline max-w-[120px] truncate">{user?.name || 'Candidate'}</span>
+              <span className="hidden md:inline max-w-[100px] truncate">{user?.name || 'Candidate'}</span>
             </button>
 
             {/* Dropdown Menu */}
             {showDropdown && (
               <div 
-                className="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-[#0c1427]/95 backdrop-blur-xl border border-slate-200 dark:border-[#1b2848] rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+                className="absolute right-0 mt-2 w-52 bg-[#0c1427] backdrop-blur-xl border border-[#1b2848] rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150"
                 onMouseLeave={() => setShowDropdown(false)}
               >
-                <div className="px-4 py-2.5 border-b border-slate-100 dark:border-[#141f38]">
-                  <p className="font-bold text-xs text-slate-900 dark:text-white truncate">{user?.name || 'Candidate'}</p>
-                  <p className="text-[11px] text-slate-400 truncate">{user?.email || 'demo@vivora.ai'}</p>
+                <div className="px-4 py-2 border-b border-[#141f38]">
+                  <p className="font-bold text-xs text-white truncate">{user?.name || 'Candidate'}</p>
+                  <p className="text-[10px] text-slate-400 truncate">{user?.email || 'demo@vivora.ai'}</p>
                 </div>
 
                 <button
                   onClick={() => { setCurrentView('settings'); setShowDropdown(false); }}
-                  className="w-full px-4 py-2.5 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 transition-colors flex items-center gap-2.5"
+                  className="w-full px-4 py-2 text-left text-xs font-medium text-slate-300 hover:bg-[#131f3b] hover:text-white transition-colors flex items-center gap-2"
                 >
-                  <Sparkles size={14} className="text-indigo-600 dark:text-indigo-400" /> Platform Settings
+                  <Settings size={14} className="text-indigo-400" /> Settings
                 </button>
 
                 <button
                   onClick={() => { logout(); setShowDropdown(false); }}
-                  className="w-full px-4 py-2.5 text-left text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors flex items-center gap-2.5 border-t border-slate-100 dark:border-[#141f38] mt-1"
+                  className="w-full px-4 py-2 text-left text-xs font-bold text-rose-400 hover:bg-rose-950/40 transition-colors flex items-center gap-2 border-t border-[#141f38] mt-1"
                 >
                   <LogOut size={14} /> Sign Out
                 </button>
