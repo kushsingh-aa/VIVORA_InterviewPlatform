@@ -5,7 +5,7 @@ import { useSkill } from '../context/SkillContext';
 import {
   Terminal, Database, TrendingUp, Users, ChevronRight, Clock,
   BarChart3, Zap, ArrowUpRight, Sparkles, Map, Target, Briefcase, Bot, ShieldCheck, CheckCircle2,
-  Sliders, Play, ChevronDown, ChevronUp, Compass
+  Sliders, Play, ChevronDown, ChevronUp, Compass, Award
 } from 'lucide-react';
 
 const TRACK_CONFIG = [

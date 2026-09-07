@@ -44,6 +44,45 @@ function getViewFromUrlOrStorage() {
   return 'dashboard';
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('ErrorBoundary caught:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-[50vh] flex items-center justify-center p-6 animate-fade-up">
+          <div className="card p-8 max-w-md w-full text-center space-y-4" style={{ background: 'var(--bg-surface)' }}>
+            <div className="w-12 h-12 rounded-xl mx-auto flex items-center justify-center bg-rose-500/10 text-rose-400 text-2xl font-bold">
+              ⚠️
+            </div>
+            <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Something went wrong</h2>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+              An unexpected render issue occurred. Click below to reload the dashboard.
+            </p>
+            <button
+              onClick={() => { this.setState({ hasError: false }); window.location.hash = '#dashboard'; window.location.reload(); }}
+              className="btn-primary text-xs px-5 py-2.5">
+              Reload Dashboard
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const { setFinalReport } = useInterview();
@@ -171,6 +210,7 @@ export default function App() {
       />
 
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6 md:px-8 md:py-8">
+        <ErrorBoundary>
         {/* ── Universal Views (all roles) ────────────────────────────── */}
         {currentView === 'dashboard'    && (
           <DashboardView
@@ -224,6 +264,7 @@ export default function App() {
         {currentView === 'admin' && role !== 'admin' && (
           <AccessDenied message="This view requires an Admin account." />
         )}
+        </ErrorBoundary>
       </main>
 
       {/* Global Omnipresent AI Career Copilot */}
