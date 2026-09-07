@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
 const SkillContext = createContext(null);
@@ -41,6 +41,12 @@ export function SkillProvider({ children }) {
       setPassportLoading(false);
     }
   }, [token]);
+
+  useEffect(() => {
+    if (token) {
+      fetchSkillPassport();
+    }
+  }, [token, fetchSkillPassport]);
 
   const fetchGap = useCallback(async (roleSlug) => {
     if (!token) return;

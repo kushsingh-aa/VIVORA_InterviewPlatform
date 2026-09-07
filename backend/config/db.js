@@ -6,6 +6,7 @@ let isMongoConnected = false;
 const inMemoryStore = {
     users: new Map(),
     interviews: new Map(),
+    skillProfiles: new Map(),
     chats: []
 };
 

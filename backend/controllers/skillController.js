@@ -85,14 +85,33 @@ function computeSkillsFromReport(report, track) {
 
 // ── Get or create skill profile for user ─────────────────────────────────
 const getOrCreateProfile = async (userId, userEmail, extraFields = {}) => {
-    if (!getIsConnected()) {
-        const key = `profile_${userEmail}`;
-        return inMemoryStore.interviews.get(key) || { userId, userEmail, skills: [], overallReadiness: 0, ...extraFields };
+    let profile = null;
+    if (getIsConnected()) {
+        try {
+            profile = await SkillProfile.findOne({ userEmail });
+        } catch (e) {
+            console.warn("MongoDB getOrCreateProfile query warning:", e.message);
+        }
     }
-    let profile = await SkillProfile.findOne({ userEmail });
     if (!profile) {
-        profile = new SkillProfile({ userId, userEmail, skills: [], overallReadiness: 0, ...extraFields });
-        await profile.save();
+        profile = inMemoryStore.skillProfiles.get(userEmail);
+    }
+    if (!profile) {
+        profile = {
+            userId,
+            userEmail,
+            skills: [],
+            overallReadiness: 0,
+            ...extraFields
+        };
+        inMemoryStore.skillProfiles.set(userEmail, profile);
+        if (getIsConnected()) {
+            try {
+                const doc = new SkillProfile(profile);
+                await doc.save();
+                profile = doc;
+            } catch (e) {}
+        }
     }
     return profile;
 };
@@ -103,16 +122,27 @@ const getSkillPassport = async (req, res) => {
         const { email: userEmail, id: userId } = req.user;
         let profile = await getOrCreateProfile(userId, userEmail);
 
-        // If no skills yet, derive from interview history
-        if ((!profile.skills || profile.skills.length === 0) && getIsConnected()) {
-            const interviews = await Interview.find({
-                userEmail,
-                status: "completed",
-                report: { $ne: null }
-            }).sort({ createdAt: -1 }).limit(10);
+        // If no skills yet, derive from interview history (MongoDB or inMemoryStore)
+        if (!profile.skills || profile.skills.length === 0) {
+            let interviews = [];
+            if (getIsConnected()) {
+                try {
+                    interviews = await Interview.find({
+                        userEmail,
+                        status: "completed",
+                        report: { $ne: null }
+                    }).sort({ createdAt: -1 }).limit(10);
+                } catch (e) {}
+            }
+            if (!interviews || interviews.length === 0) {
+                interviews = Array.from(inMemoryStore.interviews.values())
+                    .filter(i => (i.userEmail === userEmail || i.userId === userId) && i.report)
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
 
             if (interviews.length > 0) {
                 profile = await extractAndUpdateSkillsFromInterviews(profile, interviews);
+                inMemoryStore.skillProfiles.set(userEmail, profile);
             }
         }
 
@@ -129,23 +159,23 @@ const extractAndUpdateSkillsFromReport = async (userId, userEmail, report, track
         if (!report || report.overallScore === 0) return;
 
         const skillScores = computeSkillsFromReport(report, track);
+        let profile = await getOrCreateProfile(userId, userEmail);
 
-        if (!getIsConnected()) return;
-
-        let profile = await SkillProfile.findOne({ userEmail });
-        if (!profile) {
-            profile = new SkillProfile({ userId, userEmail, skills: [], overallReadiness: 0 });
-        }
+        if (!profile.skills) profile.skills = [];
 
         // Merge/update skills
         for (const { slug, proficiency } of skillScores) {
             const existing = profile.skills.find(s => s.skillSlug === slug);
-            const taxEntry = await Skill.findOne({ slug });
-            const skillName = taxEntry?.name || slug;
-            const category = taxEntry?.category || "technical";
+            let skillName = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            if (getIsConnected()) {
+                try {
+                    const taxEntry = await Skill.findOne({ slug });
+                    if (taxEntry?.name) skillName = taxEntry.name;
+                } catch (e) {}
+            }
+            const category = "technical";
 
             if (existing) {
-                // Weighted average: 70% old, 30% new
                 existing.proficiency = Math.round(existing.proficiency * 0.7 + proficiency * 0.3);
                 existing.lastAssessed = new Date();
                 existing.sessionId = sessionId;
@@ -170,7 +200,27 @@ const extractAndUpdateSkillsFromReport = async (userId, userEmail, report, track
         }
 
         profile.lastUpdated = new Date();
-        await profile.save();
+
+        // Save in memory
+        inMemoryStore.skillProfiles.set(userEmail, profile);
+
+        // Save to MongoDB if connected
+        if (getIsConnected()) {
+            try {
+                if (typeof profile.save === 'function') {
+                    await profile.save();
+                } else {
+                    await SkillProfile.findOneAndUpdate(
+                        { userEmail },
+                        { $set: profile },
+                        { upsert: true, new: true }
+                    );
+                }
+            } catch (err) {
+                console.warn("MongoDB save skill profile error:", err.message);
+            }
+        }
+
         return profile;
     } catch (err) {
         console.error("extractAndUpdateSkillsFromReport error:", err);
