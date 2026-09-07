@@ -1,218 +1,250 @@
-import React from 'react';
-import { Eye, Activity, Crosshair, MessageSquare, CheckCircle2, AlertTriangle } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { Eye, Activity, AlertTriangle, Users, Smartphone, Monitor, ShieldAlert } from 'lucide-react';
 import { useTelemetry } from '../../hooks/useTelemetry';
 import { useInterview } from '../../context/InterviewContext';
 
 export default function TelemetryHUD() {
   const { telemetry, videoRef, canvasRef, cameraAvailable } = useTelemetry(true);
-  const { liveEvaluation, isAiThinking } = useInterview();
+  const { liveEvaluation, isAiThinking, reportTelemetry } = useInterview();
+
+  const latestTelemetryRef = useRef(telemetry);
+  latestTelemetryRef.current = telemetry;
+  const prevMultiFacesRef = useRef(false);
+
+  // Send telemetry to backend reliably every 1 second without getting canceled on frame renders
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const currentData = latestTelemetryRef.current;
+      if (!currentData || !reportTelemetry) return;
+
+      reportTelemetry({
+        faceCount: typeof currentData.faceCount === 'number' ? currentData.faceCount : (currentData.faceDetected ? 1 : 0),
+        faceDetected: currentData.faceDetected,
+        isEyeContact: currentData.isEyeContact,
+        gazeDirection: currentData.gazeDirection,
+        gazeVector: currentData.gazeVector,
+        gazeFocus: currentData.gazeFocus,
+        headPose: currentData.headPose,
+        movementRate: currentData.movementRate,
+        composureScore: currentData.composureScore,
+        postureStatus: currentData.postureStatus
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [reportTelemetry]);
+
+  // Immediate push on multi-face / unauthorized person breach + audio chime
+  useEffect(() => {
+    if (telemetry.multipleFacesDetected && !prevMultiFacesRef.current) {
+      if (reportTelemetry) {
+        reportTelemetry({
+          faceCount: telemetry.faceCount,
+          faceDetected: true,
+          isEyeContact: false,
+          gazeDirection: telemetry.gazeDirection,
+          gazeVector: telemetry.gazeVector,
+          gazeFocus: telemetry.gazeFocus,
+          headPose: telemetry.headPose,
+          movementRate: telemetry.movementRate,
+          composureScore: telemetry.composureScore,
+          postureStatus: telemetry.postureStatus
+        });
+      }
+
+      // Audible alert chime for security warning
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          const audioCtx = new AudioContextClass();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.35);
+        }
+      } catch {}
+    }
+    prevMultiFacesRef.current = telemetry.multipleFacesDetected;
+  }, [telemetry.multipleFacesDetected, telemetry, reportTelemetry]);
 
   const wpm = liveEvaluation.wpm || 138;
-  const isOffTopic = liveEvaluation.isOffTopic;
-  const accuracyStatus = isOffTopic ? '⚠️ Off-Topic Response' : (liveEvaluation.accuracyStatus || 'Awaiting response');
-  const highlight = isOffTopic ? 'Please provide architectural reasoning' : (liveEvaluation.latestHighlights?.[0] || 'Technical breakdown in progress');
-
-  // Gaze Radar coordinates (-1 to +1 mapped to % in radar circle)
-  const radarX = Math.min(85, Math.max(15, 50 + (telemetry.gazeVector?.x || 0) * 35));
-  const radarY = Math.min(85, Math.max(15, 50 + (telemetry.gazeVector?.y || 0) * 35));
+  const hasBehaviorFlags = telemetry.behaviorFlags && telemetry.behaviorFlags.length > 0;
 
   return (
-    <div className="space-y-4">
-      
-      {/* Top Live Camera Box with MediaPipe Computer Vision Canvas Overlay */}
-      <div className="relative aspect-[16/10] bg-[#0c1427] border border-indigo-200/80 rounded-3xl overflow-hidden shadow-xl shadow-indigo-900/10 p-3 flex flex-col justify-between">
-        
-        {/* Top Video Header */}
-        <div className="flex items-center justify-between z-10 text-[10px] text-slate-300 select-none">
-          <div className="flex items-center gap-1.5 bg-[#090f1d]/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-            <span className="font-bold text-white uppercase tracking-wider">LIVE TELEMETRY</span>
+    <div className="space-y-3">
+      {/* Camera Feed with Proctoring Overlay */}
+      <div className={`relative aspect-[16/10] bg-slate-900 rounded-xl overflow-hidden transition-all duration-300 ${
+        telemetry.multipleFacesDetected ? 'ring-4 ring-red-500 shadow-xl shadow-red-500/20' : 'ring-1 ring-slate-800'
+      }`}>
+        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover -scale-x-100 opacity-85" />
+        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+
+        {!cameraAvailable && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-slate-900/95 text-slate-400 z-20">
+            <Monitor size={24} className="mb-2 text-slate-500" />
+            <p className="text-xs font-medium text-white">Camera Stream Inactive</p>
+            <p className="text-[10px] mt-1">Enable webcam permissions to activate real-time telemetry proctoring</p>
           </div>
-          <span className="px-2.5 py-1 bg-[#090f1d]/80 backdrop-blur-md border border-white/10 rounded-full text-[9px] font-bold text-cyan-300">
-            {telemetry.trackingEngine}
-          </span>
-        </div>
+        )}
 
-        {/* Video Canvas Container */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          
-          {/* Webcam Video Stream */}
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover -scale-x-100 opacity-75"
-          />
-
-          {/* MediaPipe Real-Time Facial Landmarks & Eye Tracking Canvas Overlay */}
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none z-10"
-          />
-
-          {!cameraAvailable && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-[#090f1d]/90 text-slate-400 z-20">
-              <div className="w-10 h-10 rounded-2xl bg-[#121c33] border border-[#1b2848] flex items-center justify-center mb-1 text-indigo-400">
-                <Activity size={18} />
+        {/* PROCTORING SECURITY WARNING: MULTI-PERSON DETECTED */}
+        {telemetry.multipleFacesDetected && (
+          <div className="absolute top-0 left-0 right-0 bg-red-600/95 backdrop-blur-sm text-white px-3 py-2 flex items-center justify-between shadow-lg z-30 border-b border-red-400 animate-pulse">
+            <div className="flex items-center gap-2">
+              <ShieldAlert size={16} className="text-white shrink-0" />
+              <div>
+                <p className="text-[11px] font-black tracking-wide uppercase">Unauthorized Person Detected</p>
+                <p className="text-[9px] text-red-100 font-medium">
+                  {telemetry.faceCount} people in frame. Only the interviewee is permitted.
+                </p>
               </div>
-              <p className="text-xs font-bold text-white">Camera Feed Initializing</p>
-              <p className="text-[10px] text-slate-400 max-w-[200px]">Allow webcam permissions for live eye tracking</p>
             </div>
-          )}
-
-          {/* Cybernetic Corner Reticles */}
-          <div className="absolute inset-4 border border-indigo-400/30 pointer-events-none z-10">
-            <div className="w-3.5 h-3.5 border-t-2 border-l-2 border-indigo-400 absolute -top-0.5 -left-0.5"></div>
-            <div className="w-3.5 h-3.5 border-t-2 border-r-2 border-indigo-400 absolute -top-0.5 -right-0.5"></div>
-            <div className="w-3.5 h-3.5 border-b-2 border-l-2 border-indigo-400 absolute -bottom-0.5 -left-0.5"></div>
-            <div className="w-3.5 h-3.5 border-b-2 border-r-2 border-indigo-400 absolute -bottom-0.5 -right-0.5"></div>
+            <span className="bg-black/30 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+              Flagged
+            </span>
           </div>
-        </div>
+        )}
 
-        {/* Bottom Video Telemetry Subtext */}
-        <div className="flex items-center justify-between z-10 text-[10px] text-slate-300 bg-[#090f1d]/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 select-none">
+        {/* PHONE / NOTES WARNING */}
+        {telemetry.phoneUsageSuspected && !telemetry.multipleFacesDetected && (
+          <div className="absolute top-2 left-2 right-2 bg-amber-600/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg flex items-center gap-2 z-20 shadow">
+            <Smartphone size={14} className="shrink-0" />
+            <span className="text-[11px] font-bold">Head-Down Gaze: Possible Phone/Notes Usage</span>
+          </div>
+        )}
+
+        {/* Status bar */}
+        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-3 py-1.5 bg-gradient-to-t from-black/85 via-black/40 to-transparent text-[10px] text-white z-10">
           <span className="flex items-center gap-1.5">
             <span className={`w-2 h-2 rounded-full ${telemetry.faceDetected ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
-            <span className="font-bold text-white">{telemetry.faceDetected ? 'EYE TRACK: LOCKED' : 'SEARCHING FACE'}</span>
+            <span className="font-semibold">
+              {telemetry.faceDetected ? `${telemetry.faceCount} Person${telemetry.faceCount > 1 ? 's' : ''}` : 'No Face'}
+            </span>
           </span>
-          <span className="text-cyan-300 font-bold">{telemetry.gazeDirection}</span>
-          <span className="text-purple-300 font-bold">FOCUS: {telemetry.gazeFocus}%</span>
+          <span className={`font-semibold px-2 py-0.5 rounded ${
+            telemetry.isEyeContact ? 'bg-emerald-500/30 text-emerald-300' : 'bg-amber-500/30 text-amber-300'
+          }`}>
+            {telemetry.gazeDirection}
+          </span>
+          <span className="font-bold">
+            Focus: {telemetry.gazeFocus}%
+          </span>
         </div>
-
       </div>
 
-      {/* 2x2 Real-Time Computer Vision & Telemetry Cards */}
-      <div className="grid grid-cols-2 gap-3.5 select-none">
-        
-        {/* Card 1: EYE TRACKING & GAZE RADAR */}
-        <div className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-4 flex flex-col justify-between space-y-2 shadow-md shadow-indigo-900/5 hover:shadow-lg transition-all">
-          <div className="flex items-center justify-between text-slate-600">
-            <span className="text-[10px] font-extrabold tracking-wider uppercase text-indigo-700 flex items-center gap-1.5">
-              <Eye size={13} className="text-indigo-600" />
-              EYE TRACKING
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-2 gap-2.5">
+        {/* Eye Tracking with Radar */}
+        <div className="bg-white border border-slate-200 rounded-xl p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <Eye size={12} className="text-indigo-500" /> Eye Tracking
             </span>
-            <span className="text-xs font-black text-indigo-600">{telemetry.gazeFocus}%</span>
+            <span className={`text-xs font-bold ${telemetry.isEyeContact ? 'text-emerald-600' : 'text-amber-600'}`}>
+              {telemetry.gazeFocus}%
+            </span>
           </div>
 
-          {/* Interactive Radar Target Reticle */}
-          <div className="flex items-center justify-center py-1">
-            <div className="relative w-16 h-16 rounded-full border border-indigo-200 bg-[#f4f8fe] flex items-center justify-center overflow-hidden shadow-inner">
-              
-              {/* Radar Circles */}
-              <div className="absolute inset-2 rounded-full border border-indigo-200"></div>
-              <div className="absolute w-full h-[1px] bg-indigo-200"></div>
-              <div className="absolute h-full w-[1px] bg-indigo-200"></div>
-
-              {/* Pupil Target Dot */}
+          {/* Gaze radar */}
+          <div className="flex justify-center py-1">
+            <div className="relative w-14 h-14 rounded-full border border-slate-200 bg-slate-50">
+              <div className="absolute inset-1.5 rounded-full border border-slate-200"></div>
+              <div className="absolute w-full h-px bg-slate-200"></div>
+              <div className="absolute h-full w-px bg-slate-200"></div>
               <div
-                className="absolute w-3.5 h-3.5 -ml-[7px] -mt-[7px] rounded-full bg-gradient-to-tr from-indigo-600 to-cyan-500 shadow-md shadow-indigo-500/50 transition-all duration-75 flex items-center justify-center"
+                className={`absolute w-3 h-3 -ml-1.5 -mt-1.5 rounded-full shadow-sm transition-all duration-100 ${
+                  telemetry.isEyeContact ? 'bg-emerald-500' : 'bg-amber-500'
+                }`}
                 style={{
-                  left: `${radarX}%`,
-                  top: `${radarY}%`
+                  left: `${Math.min(85, Math.max(15, 50 + (telemetry.gazeVector?.x || 0) * 35))}%`,
+                  top: `${Math.min(85, Math.max(15, 50 + (telemetry.gazeVector?.y || 0) * 35))}%`
                 }}
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
-              </div>
-
+              ></div>
             </div>
           </div>
-
-          <div className="bg-[#f0f4ff] border border-indigo-100 text-indigo-800 text-center py-0.5 rounded-xl text-[10px] font-bold truncate">
+          <div className="text-[10px] text-center font-medium text-slate-600 mt-1 truncate">
             {telemetry.gazeDirection}
           </div>
         </div>
 
-        {/* Card 2: BODY MOVEMENT & COMPOSURE */}
-        <div className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-4 flex flex-col justify-between space-y-2 shadow-md shadow-indigo-900/5 hover:shadow-lg transition-all">
-          <div className="flex items-center justify-between text-slate-600">
-            <span className="text-[10px] font-extrabold tracking-wider uppercase text-purple-700 flex items-center gap-1.5">
-              <Crosshair size={13} className="text-purple-600" />
-              BODY POSTURE
+        {/* Body Posture */}
+        <div className="bg-white border border-slate-200 rounded-xl p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <Activity size={12} className="text-purple-500" /> Posture
             </span>
-            <span className="text-xs font-black text-purple-600">{telemetry.composureScore}/100</span>
+            <span className="text-xs font-bold text-slate-900">{telemetry.composureScore}/100</span>
           </div>
-
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs text-slate-700 font-bold">
-              <span>Composure</span>
-              <span className="text-purple-600 text-[11px]">{telemetry.movementRate} mm/s</span>
-            </div>
-
-            {/* Composure Progress Bar */}
-            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-              <div 
-                className="h-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-500 transition-all duration-300"
+            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+              <div
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  telemetry.composureScore >= 80 ? 'bg-emerald-500' :
+                  telemetry.composureScore >= 60 ? 'bg-indigo-500' : 'bg-amber-500'
+                }`}
                 style={{ width: `${telemetry.composureScore}%` }}
               />
             </div>
-
-            <div className="flex justify-between text-[9px] text-slate-400 font-medium">
-              <span>Restless</span>
-              <span className="text-purple-700 font-bold">Upright & Calm</span>
-            </div>
-          </div>
-
-          <div className="bg-[#f7f0ff] border border-purple-100 text-purple-800 text-center py-0.5 rounded-xl text-[10px] font-bold truncate">
-            {telemetry.postureStatus}
+            <div className="text-[10px] text-center text-slate-500 truncate">{telemetry.postureStatus}</div>
           </div>
         </div>
 
-        {/* Card 3: SPEECH CADENCE */}
-        <div className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-4 flex flex-col justify-between space-y-2 shadow-md shadow-indigo-900/5 hover:shadow-lg transition-all">
-          <div className="flex items-center justify-between text-slate-600">
-            <span className="text-[10px] font-extrabold tracking-wider uppercase text-blue-700 flex items-center gap-1.5">
-              <MessageSquare size={13} className="text-blue-600" />
-              SPEECH CADENCE
-            </span>
+        {/* Speech Cadence */}
+        <div className="bg-white border border-slate-200 rounded-xl p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Speech</span>
           </div>
-
-          <div className="space-y-1">
-            <span className="font-extrabold text-sm text-slate-900 block">
-              {wpm} WPM
-            </span>
-
-            {/* Cadence Bars */}
-            <div className="flex items-end gap-1 h-5 pt-1">
-              <span className="w-2 bg-blue-300 rounded-sm" style={{ height: `${Math.min(100, (wpm / 160) * 40)}%` }}></span>
-              <span className="w-2 bg-blue-400 rounded-sm" style={{ height: `${Math.min(100, (wpm / 160) * 70)}%` }}></span>
-              <span className="w-2 bg-blue-600 rounded-sm" style={{ height: `${Math.min(100, (wpm / 160) * 100)}%` }}></span>
-              <span className="w-2 bg-blue-500 rounded-sm" style={{ height: `${Math.min(100, (wpm / 160) * 60)}%` }}></span>
-              <span className="w-2 bg-blue-400 rounded-sm" style={{ height: `${Math.min(100, (wpm / 160) * 85)}%` }}></span>
-            </div>
+          <div className="text-lg font-bold text-slate-900">{wpm} <span className="text-xs font-normal text-slate-400">WPM</span></div>
+          <div className="text-[10px] text-slate-500 mt-1">
+            {wpm >= 120 && wpm <= 165 ? 'Optimal pace' : wpm < 120 ? 'Deliberate' : 'Rapid'}
           </div>
-
-          <span className="text-[10px] text-blue-700 font-semibold truncate block">
-            {wpm >= 120 && wpm <= 165 ? 'Optimal Cadence (120-165)' : wpm < 120 ? 'Deliberate Pace' : 'Rapid Delivery'}
-          </span>
         </div>
 
-        {/* Card 4: ANSWER ACCURACY */}
-        <div className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-4 flex flex-col justify-between space-y-2 shadow-md shadow-indigo-900/5 hover:shadow-lg transition-all">
-          <div className="flex items-center justify-between text-slate-600">
-            <span className={`text-[10px] font-extrabold tracking-wider uppercase flex items-center gap-1.5 ${isOffTopic ? 'text-rose-700' : 'text-emerald-700'}`}>
-              {isOffTopic ? <AlertTriangle size={13} /> : <CheckCircle2 size={13} />}
-              ANSWER ACCURACY
-            </span>
+        {/* Answer Quality */}
+        <div className="bg-white border border-slate-200 rounded-xl p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Quality</span>
           </div>
-
-          <div className="space-y-1 py-0.5">
-            <div className={`p-2 rounded-xl text-[10px] leading-snug line-clamp-2 ${
-              isOffTopic
-                ? 'bg-rose-50 border border-rose-100 text-rose-800'
-                : 'bg-[#f4f7fe] border border-indigo-50 text-slate-800'
-            }`}>
-              {isAiThinking ? 'Evaluating response...' : highlight}
-            </div>
+          <div className="text-[11px] text-slate-700 leading-snug line-clamp-2">
+            {isAiThinking ? 'Evaluating...' : (liveEvaluation.latestHighlights?.[0] || 'Awaiting response')}
           </div>
-
-          <span className={`text-[10px] font-bold truncate block ${isOffTopic ? 'text-rose-700' : 'text-emerald-700'}`}>
-            {accuracyStatus}
-          </span>
+          <div className="text-[10px] text-slate-500 mt-1 truncate">
+            {liveEvaluation.accuracyStatus || 'Ready'}
+          </div>
         </div>
-
       </div>
 
+      {/* Behavior Alerts Panel */}
+      {hasBehaviorFlags && (
+        <div className="bg-white border border-slate-200 rounded-xl p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <AlertTriangle size={12} className="text-amber-500" />
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Behavior & Integrity Alerts</span>
+          </div>
+          <div className="space-y-1.5">
+            {telemetry.behaviorFlags.map((flag, idx) => (
+              <div key={idx} className={`flex items-center gap-2 text-[11px] px-2.5 py-1.5 rounded-lg ${
+                flag.severity === 'critical' ? 'bg-red-50 text-red-700 border border-red-200 font-medium' :
+                flag.severity === 'high' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                'bg-slate-50 text-slate-600 border border-slate-100'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                  flag.severity === 'critical' ? 'bg-red-500 animate-ping' :
+                  flag.severity === 'high' ? 'bg-amber-500' : 'bg-slate-400'
+                }`}></span>
+                <span className="font-medium">{flag.message}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

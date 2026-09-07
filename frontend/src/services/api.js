@@ -27,4 +27,19 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Response interceptor to handle expired tokens
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      const msg = error.response.data?.message;
+      if (msg && (msg.includes('expired') || msg.includes('Invalid Token'))) {
+        localStorage.removeItem('vivora_token');
+        localStorage.removeItem('vivora_user');
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

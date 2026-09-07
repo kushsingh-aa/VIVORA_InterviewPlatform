@@ -5,13 +5,16 @@ import './index.css';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { InterviewProvider } from './context/InterviewContext';
+import { SkillProvider } from './context/SkillContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider>
       <AuthProvider>
         <InterviewProvider>
-          <App />
+          <SkillProvider>
+            <App />
+          </SkillProvider>
         </InterviewProvider>
       </AuthProvider>
     </ThemeProvider>

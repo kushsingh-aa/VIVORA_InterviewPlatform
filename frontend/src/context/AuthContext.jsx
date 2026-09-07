@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await api.post('/auth/login', { email, password });
       const { token: jwtToken, user: userData } = res.data;
-      
+
       setToken(jwtToken);
       setUser(userData);
       localStorage.setItem('vivora_token', jwtToken);
@@ -42,20 +42,68 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const register = async ({ name, email, password, role, institution, company, designation, branch, graduationYear }) => {
+    try {
+      const res = await api.post('/auth/register', {
+        name, email, password, role: role || 'candidate',
+        institution, company, designation, branch, graduationYear
+      });
+      const { token: jwtToken, user: userData } = res.data;
+      setToken(jwtToken);
+      setUser(userData);
+      localStorage.setItem('vivora_token', jwtToken);
+      localStorage.setItem('vivora_user', JSON.stringify(userData));
+      return { success: true };
+    } catch (err) {
+      return {
+        success: false,
+        message: err.response?.data?.message || 'Registration failed. Please try again.'
+      };
+    }
+  };
+
   const loginDemo = () => {
     const randomId = Math.floor(Math.random() * 1000) + 10;
     const demoUser = {
       id: randomId,
-      name: 'demo.candidate',
+      name: 'Demo Candidate',
       email: 'demo.candidate@vivora.ai',
       role: 'candidate'
     };
     const demoToken = 'demo_token_' + Date.now();
-
     setToken(demoToken);
     setUser(demoUser);
     localStorage.setItem('vivora_token', demoToken);
     localStorage.setItem('vivora_user', JSON.stringify(demoUser));
+  };
+
+  const switchDemoRole = (targetRole) => {
+    const roleProfiles = {
+      candidate: { name: 'Aarav Sharma', email: 'aarav.sharma@nitk.edu.in', institution: 'NIT Karnataka' },
+      recruiter: { name: 'Vikram Mehta', email: 'vikram.mehta@google.com', company: 'Google Cloud' },
+      faculty:   { name: 'Dr. Anita Rao', email: 'anita.rao@nitk.edu.in', institution: 'NIT Karnataka' },
+      admin:     { name: 'Platform Admin', email: 'admin@vivora.ai', company: 'Vivora Platform' }
+    };
+    const profile = roleProfiles[targetRole] || roleProfiles.candidate;
+    const updatedUser = {
+      ...(user || {}),
+      id: user?.id || 101,
+      role: targetRole,
+      name: profile.name,
+      email: profile.email,
+      company: profile.company || '',
+      institution: profile.institution || ''
+    };
+    setUser(updatedUser);
+    localStorage.setItem('vivora_user', JSON.stringify(updatedUser));
+  };
+
+  const updateUser = (updatedFields) => {
+    setUser(prev => {
+      const next = { ...(prev || {}), ...updatedFields };
+      localStorage.setItem('vivora_user', JSON.stringify(next));
+      return next;
+    });
   };
 
   const logout = () => {
@@ -66,7 +114,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, login, loginDemo, logout }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, login, register, loginDemo, logout, switchDemoRole, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -75,3 +123,4 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
+

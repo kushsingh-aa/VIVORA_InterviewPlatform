@@ -8,8 +8,7 @@ export default function SettingsView() {
   const { speechRate, setSpeechRate } = useInterview();
 
   useEffect(() => {
-    const saved = localStorage.getItem('vivora_api_key') || '';
-    setApiKeyInput(saved);
+    setApiKeyInput(localStorage.getItem('vivora_api_key') || '');
   }, []);
 
   const handleSave = (e) => {
@@ -24,85 +23,68 @@ export default function SettingsView() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-200">
-      
-      {/* Header */}
-      <div className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-6 md:p-8 shadow-xl shadow-indigo-900/5">
-        <div className="flex items-center gap-3.5 mb-2">
-          <div className="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-purple-600 text-white rounded-2xl flex items-center justify-center shadow-md shadow-indigo-500/20">
-            <Settings size={22} />
-          </div>
-          <div>
-            <h2 className="text-2xl font-extrabold text-slate-900">Platform Settings</h2>
-            <p className="text-xs text-slate-500 font-normal">
-              Configure your custom AI model keys, speech synthesis rate, and platform preferences.
-            </p>
-          </div>
+    <div className="max-w-xl mx-auto space-y-6 animate-fade-up">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ background: 'hsla(239,84%,67%,0.15)', color: 'var(--v-indigo)', border: '1px solid hsla(239,84%,67%,0.3)' }}>
+          <Settings size={20} />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Settings</h1>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Configure your custom API keys and interview preferences.</p>
         </div>
       </div>
 
       {savedSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs font-bold text-emerald-700 flex items-center gap-2 animate-in fade-in duration-200 shadow-sm">
-          <CheckCircle2 size={16} />
-          <span>Settings saved successfully!</span>
+        <div className="p-3.5 rounded-xl text-xs flex items-center gap-2"
+          style={{ background: 'hsla(160,84%,39%,0.12)', color: 'hsl(160,84%,50%)', border: '1px solid hsla(160,84%,39%,0.3)' }}>
+          <CheckCircle2 size={16} /> Preferences successfully updated.
         </div>
       )}
 
-      {/* API Key Form */}
-      <form onSubmit={handleSave} className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-6 md:p-8 space-y-4 shadow-xl shadow-indigo-900/5">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
-            <Key size={16} className="text-indigo-600" />
-            <span>Custom LLM API Key (OpenRouter / OpenAI / Gemini)</span>
-          </div>
-          <p className="text-xs text-slate-500 leading-relaxed font-normal">
-            By default, the server uses your configured environment keys. You can override it here with your own key for testing.
-          </p>
+      <form onSubmit={handleSave} className="p-6 rounded-2xl space-y-4"
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+        <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+          <Key size={15} style={{ color: 'var(--v-indigo)' }} /> Custom LLM API Key
         </div>
-
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+          Optionally override the server's AI backend with your personal OpenRouter or Gemini API key.
+        </p>
         <input
           type="password"
           value={apiKeyInput}
           onChange={(e) => setApiKeyInput(e.target.value)}
-          placeholder="sk-or-v1-... or sk-..."
-          className="w-full p-3.5 border border-indigo-100 rounded-2xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 font-mono text-xs text-slate-900 bg-[#f8faff] transition-all"
+          placeholder="sk-or-v1-... or AIzaSy..."
+          className="input-dark font-mono text-xs"
         />
-
-        <div className="pt-2 flex justify-end">
-          <button
-            type="submit"
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 hover:from-indigo-700 hover:via-purple-700 hover:to-blue-700 text-white rounded-2xl font-bold text-xs transition-all shadow-lg shadow-indigo-500/25 active:scale-95"
-          >
-            <Save size={14} />
-            <span>Save Preferences</span>
+        <div className="flex justify-end pt-1">
+          <button type="submit" className="btn-primary flex items-center gap-2">
+            <Save size={14} /> Save Preferences
           </button>
         </div>
       </form>
 
-      {/* Voice Preferences */}
-      <div className="bg-white/95 backdrop-blur-xl border border-indigo-100 rounded-3xl p-6 md:p-8 space-y-6 shadow-xl shadow-indigo-900/5">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
-              <Volume2 size={16} className="text-indigo-600" />
-              <span>AI Voice Speech Rate</span>
-            </div>
-            <span className="font-mono font-bold text-xs text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
-              {speechRate}x
-            </span>
+      <div className="p-6 rounded-2xl space-y-4"
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <Volume2 size={15} style={{ color: 'var(--v-indigo)' }} /> AI Speech Synthesis Rate
           </div>
-          <input
-            type="range"
-            min="0.8"
-            max="1.4"
-            step="0.1"
-            value={speechRate}
-            onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
-            className="w-full accent-indigo-600 cursor-pointer"
-          />
+          <span className="font-mono text-xs px-2.5 py-0.5 rounded-md font-bold"
+            style={{ background: 'hsla(239,84%,67%,0.15)', color: 'var(--v-indigo)', border: '1px solid hsla(239,84%,67%,0.3)' }}>
+            {speechRate}x
+          </span>
         </div>
+        <input
+          type="range"
+          min="0.8"
+          max="1.4"
+          step="0.1"
+          value={speechRate}
+          onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
+          className="w-full accent-indigo-500 cursor-pointer"
+        />
       </div>
-
     </div>
   );
 }

@@ -3,6 +3,8 @@ const Chat = require("../models/Chat");
 const { getIsConnected, inMemoryStore } = require("../config/db");
 const gptService = require("../services/gptService");
 const visionService = require("../services/visionService");
+const behaviorService = require("../services/behaviorService");
+const { extractAndUpdateSkillsFromReport } = require("./skillController");
 
 // In-memory active session cache for ultra-fast conversational state
 const activeSessions = new Map();
@@ -259,17 +261,41 @@ const assistantChat = async (req, res) => {
  */
 const recordTelemetry = async (req, res) => {
     try {
-        const { sessionId, telemetryData } = req.body;
-        const analysis = visionService.analyzeFrame(telemetryData);
+        const { sessionId, telemetryData = {} } = req.body;
+        const resolvedFaceCount = typeof telemetryData.faceCount === 'number'
+            ? telemetryData.faceCount
+            : (telemetryData.faceDetected ? 1 : 0);
 
-        const session = activeSessions.get(sessionId);
-        if (session) {
-            if (!session.telemetryLog) session.telemetryLog = [];
-            session.telemetryLog.push(analysis);
-            if (session.telemetryLog.length > 200) session.telemetryLog.shift(); // Bound memory
+        const normalizedData = {
+            ...telemetryData,
+            faceCount: resolvedFaceCount,
+            faceDetected: resolvedFaceCount > 0
+        };
+
+        const visionAnalysis = visionService.analyzeFrame(normalizedData);
+        const behaviorAnalysis = behaviorService.analyzeFrame(normalizedData);
+
+        const combinedAnalysis = {
+            ...visionAnalysis,
+            faceCount: resolvedFaceCount,
+            flags: behaviorAnalysis.flags,
+            suspicionScore: behaviorAnalysis.overallSuspicionScore
+        };
+
+        let session = activeSessions.get(sessionId);
+        if (!session && sessionId) {
+            // Initialize in-memory session placeholder if not active yet
+            session = { sessionId, telemetryLog: [] };
+            activeSessions.set(sessionId, session);
         }
 
-        res.json({ success: true, analysis });
+        if (session) {
+            if (!session.telemetryLog) session.telemetryLog = [];
+            session.telemetryLog.push(combinedAnalysis);
+            if (session.telemetryLog.length > 1200) session.telemetryLog.shift(); // Bound memory to 1200 frames (~20 mins)
+        }
+
+        res.json({ success: true, analysis: combinedAnalysis });
     } catch (err) {
         res.status(500).json({ message: "Telemetry recording error", error: err.message });
     }
@@ -288,14 +314,18 @@ const completeInterview = async (req, res) => {
             const mockSession = await gptService.initSession("software", "Senior", "Candidate", effectiveApiKey);
             const report = await gptService.generateFinalReport(mockSession, effectiveApiKey);
             const visionReport = visionService.generateSessionSummary([]);
+            const behaviorReport = behaviorService.generateSessionReport([]);
             report.visionBiometrics = visionReport;
+            report.behaviorIntegrity = behaviorReport;
             return res.json({ success: true, report });
         }
 
         session.status = "completed";
         const report = await gptService.generateFinalReport(session, effectiveApiKey);
         const visionReport = visionService.generateSessionSummary(session.telemetryLog || []);
+        const behaviorReport = behaviorService.generateSessionReport(session.telemetryLog || []);
         report.visionBiometrics = visionReport;
+        report.behaviorIntegrity = behaviorReport;
 
         // Update in MongoDB
         if (getIsConnected()) {
@@ -319,6 +349,19 @@ const completeInterview = async (req, res) => {
                 report,
                 createdAt: new Date()
             });
+        }
+
+        // Auto-extract skills from the completed report → update Skill Passport
+        try {
+            await extractAndUpdateSkillsFromReport(
+                session.userId,
+                session.userEmail,
+                report,
+                session.track,
+                sessionId
+            );
+        } catch (skillErr) {
+            console.warn("Skill extraction warning:", skillErr.message);
         }
 
         res.json({

@@ -1,12 +1,10 @@
 const axios = require("axios");
-const https = require("https");
-
-const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
 /**
  * Universal LLM caller supporting OpenRouter, OpenAI, Google Gemini, and Groq
  */
-async function callLLM({ systemPrompt, messages, temperature = 0.7, jsonMode = false, apiKeyOverride = null }) {
+async function 
+callLLM({ systemPrompt, messages, temperature = 0.7, jsonMode = false, apiKeyOverride = null }) {
     const openrouterKey = apiKeyOverride || process.env.OPENROUTER_API_KEY || (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith("sk-or-v1-") ? process.env.OPENAI_API_KEY : null);
     const geminiKey = (apiKeyOverride && apiKeyOverride.startsWith("AIza")) ? apiKeyOverride : process.env.GEMINI_API_KEY;
     const openaiKey = apiKeyOverride || process.env.OPENAI_API_KEY;
@@ -28,15 +26,13 @@ async function callLLM({ systemPrompt, messages, temperature = 0.7, jsonMode = f
                 model,
                 messages: formattedMessages,
                 temperature,
-                ...(jsonMode && isJsonSupported ? { response_format: { type: "json_object" } } : {})
-            }, {
+                ...(jsonMode && isJsonSupported ? { response_format: { type: "json_object" } } : {})                }, {
                 headers: {
                     "Authorization": `Bearer ${openrouterKey}`,
                     "HTTP-Referer": "http://localhost:5000",
                     "X-Title": "Vivora AI Assessment Portal",
                     "Content-Type": "application/json"
                 },
-                httpsAgent,
                 timeout: 25000
             });
 
@@ -699,6 +695,82 @@ Respond in JSON format:
             areasForGrowth: llmReport.areasForGrowth,
             questionBreakdown,
             completedAt: new Date().toISOString()
+        };
+    },
+
+    /**
+     * Ask Vivora AI Career & Interview Copilot
+     * Supports both in-session interview coaching and platform-wide career assistance.
+     */
+    askCopilotAssistant: async (query, sessionState = {}, apiKey = null, userContext = null) => {
+        const isInterviewSession = sessionState && sessionState.sessionId && sessionState.currentQuestion;
+        const qLower = (query || "").toLowerCase();
+
+        const systemPrompt = isInterviewSession
+            ? `You are Vivora Interview Copilot, a high-caliber AI mentor assisting a candidate during their live technical/behavioral interview.
+Current Track: ${sessionState.track || "software"}
+Current Role: ${sessionState.roleTitle || "Senior Engineer"}
+Current Question: ${sessionState.currentQuestion?.text || "General Technical Discussion"}
+
+Provide concise, highly actionable frameworks (e.g., STAR framework for behavioral, Tradeoff matrix for architecture, MECE for problem solving). Do NOT solve the question outright for the candidate; instead, give them the structural scaffolding, tradeoffs, and key failure modes to consider.`
+            : `You are Vivora AI Career Copilot, an intelligent career strategist for college students and job seekers on the VIVORA SIH26044 Platform.
+Your goal is to guide students on skill acquisition, career roadmaps, application shortlisting, and bridge the academia-to-industry gap.
+Candidate Context:
+- Target roles: Backend Developer, Full Stack Engineer, Cloud/DevOps, Data Scientist
+- Verified strengths: Java, DSA, Problem Solving, Communication
+- Key industry gaps: Spring Boot, Cloud Infrastructure (AWS/Docker), SQL Optimization
+
+Provide clear, encouraging, structured advice with realistic step-by-step roadmaps, upskilling sequences, and explainable recommendations.`;
+
+        // Attempt LLM call if credentials present
+        try {
+            const llmResponse = await callLLM({
+                systemPrompt,
+                messages: [
+                    ...(isInterviewSession && sessionState.history ? sessionState.history.slice(-4).map(h => ({
+                        role: h.speaker === "candidate" ? "user" : "assistant",
+                        content: h.text
+                    })) : []),
+                    { role: "user", content: query }
+                ],
+                temperature: 0.6,
+                jsonMode: false,
+                apiKeyOverride: apiKey
+            });
+
+            if (llmResponse && typeof llmResponse === "string" && llmResponse.trim().length > 0) {
+                return {
+                    reply: llmResponse.trim(),
+                    timestamp: new Date().toISOString(),
+                    source: "llm"
+                };
+            }
+        } catch (llmErr) {
+            console.warn("Copilot LLM fallback invoked:", llmErr.message);
+        }
+
+        // Intelligent rule-based career and interview answers for offline / fallback demo
+        let reply = "";
+        if (qLower.includes("shortlist") || qLower.includes("why am i not getting") || qLower.includes("reject")) {
+            reply = `**Why you might not be getting shortlisted:**\n\n1. **High Match vs. Missing Gatekeeper Skills**: Your strongest verified areas are **Java (87%)** and **DSA (84%)**, which qualify you for initial screens. However, most target backend roles require **Spring Boot (42%)** and **SQL optimization (71%)**.\n2. **Proficiency Thresholds**: Companies set hard minimums (e.g., Spring Boot ≥ 70%). Even with high DSA scores, lacking the core framework drops your weighted match below the 80% recruiter auto-shortlist threshold.\n\n💡 **Action Plan:** Complete 2 Spring Boot REST API projects and take a targeted Vivora mock interview on System Design to boost your match score to **91%+**.`;
+        } else if (qLower.includes("what should i learn first") || qLower.includes("what to learn") || qLower.includes("priority")) {
+            reply = `**Recommended Upskilling Sequence for Maximum ROI:**\n\n1. 🥇 **Spring Boot Fundamentals & MVC** (Closes your biggest 48% gap; increases job compatibility by +15%)\n2. 🥈 **RESTful API Design & Error Handling** (Pairs directly with your backend targets)\n3. 🥉 **SQL Indexing & Query Tuning** (Raises your current 71% to 85%+)\n4. 🏅 **Docker & Containerization** (Crucial for modern CI/CD deployment)\n\nEstimated time: **3–4 weeks** of dedicated practice.`;
+        } else if (qLower.includes("star") || qLower.includes("behavioral")) {
+            reply = `**STAR Framework for Behavioral Delivery:**\n\n- **Situation:** Set the scene in 2 sentences (context, company, stakes).\n- **Task:** What was your specific responsibility? What was the hurdle?\n- **Action:** 60% of your answer — the exact decisions, technical tradeoffs, and leadership you took.\n- **Result:** Quantified outcome (e.g., *"reduced P99 latency by 32% and unblocked 4 teams"*).`;
+        } else if (qLower.includes("tradeoff") || qLower.includes("trade-off") || qLower.includes("system design")) {
+            reply = `**Key System Design Tradeoff Matrix:**\n\n- **Consistency vs. Availability (CAP Theorem):** CP (banking/inventory) vs. AP (social feeds/telemetry).\n- **Latency vs. Accuracy:** Synchronous writes vs. asynchronous event-driven updates with RabbitMQ/Kafka.\n- **Read vs. Write Optimization:** Normalized SQL tables for ACID writes vs. denormalized Redis/NoSQL views for instant reads.\n\nMention both options, justify why you chose one for the current traffic profile, and state when you would pivot.`;
+        } else if (qLower.includes("roadmap") || qLower.includes("guide") || qLower.includes("plan")) {
+            reply = `**4-Week Accelerated Career Upskilling Roadmap:**\n\n- **Week 1:** Master Spring Boot Dependency Injection, Spring Data JPA, and REST Controllers.\n- **Week 2:** Build an end-to-end e-commerce order service with JWT authentication and MySQL.\n- **Week 3:** Introduce Redis caching and benchmark P99 query latency under Apache JMeter load.\n- **Week 4:** Take the Vivora AI Backend Interview to verify your skills on your Digital Skill Passport.`;
+        } else {
+            reply = isInterviewSession
+                ? `**Vivora Copilot Pointer:** Focus on breaking this question down systematically. State your assumptions upfront, identify edge cases (e.g. concurrency, memory bounds), and outline a baseline solution before optimizing.`
+                : `**Vivora AI Career Copilot:** I am analyzing your Skill Passport. Your highest verified competencies are **Java**, **DSA**, and **Problem Solving**. To unlock the top 20% of job matches, focus on closing your gaps in **Spring Boot** and **Cloud Infrastructure**. Ask me: *"Why am I not getting shortlisted?"* or *"What should I learn first?"*`;
+        }
+
+        return {
+            reply,
+            timestamp: new Date().toISOString(),
+            source: "rule_engine"
         };
     }
 };

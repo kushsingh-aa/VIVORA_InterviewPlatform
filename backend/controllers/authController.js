@@ -3,17 +3,21 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { getIsConnected, inMemoryStore } = require("../config/db");
 
-const JWT_SECRET = process.env.JWT_SECRET || "vivora_super_secure_jwt_secret_key_2026";
+function getJwtSecret() {
+    return process.env.JWT_SECRET || "vivora_super_secure_jwt_secret_key_2026";
+}
 
 // ===================== REGISTER =====================
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, role, institution, company, designation, branch, graduationYear } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: "Name, email, and password are required" });
         }
 
+        const allowedRoles = ["candidate", "recruiter", "faculty", "institution_admin", "admin"];
+        const userRole = allowedRoles.includes(role) ? role : "candidate";
         const normalizedEmail = email.toLowerCase().trim();
 
         // 1. Check MongoDB if connected
@@ -27,7 +31,13 @@ const registerUser = async (req, res) => {
             const newUser = new User({
                 name,
                 email: normalizedEmail,
-                password: hashedPassword
+                password: hashedPassword,
+                role: userRole,
+                institution: institution || "",
+                company: company || "",
+                designation: designation || "",
+                branch: branch || "",
+                graduationYear: graduationYear || null
             });
 
             await newUser.save();
@@ -35,8 +45,8 @@ const registerUser = async (req, res) => {
             delete userObj.password;
 
             const token = jwt.sign(
-                { id: userObj._id, email: userObj.email, name: userObj.name },
-                JWT_SECRET,
+                { id: userObj._id, email: userObj.email, name: userObj.name, role: userObj.role },
+                getJwtSecret(),
                 { expiresIn: "7d" }
             );
 
@@ -58,6 +68,8 @@ const registerUser = async (req, res) => {
             name,
             email: normalizedEmail,
             password: hashedPassword,
+            role: userRole,
+            institution: institution || "",
             createdAt: new Date()
         };
 
@@ -65,7 +77,11 @@ const registerUser = async (req, res) => {
         const userWithoutPassword = { ...memUser };
         delete userWithoutPassword.password;
 
-        const token = jwt.sign(userWithoutPassword, JWT_SECRET, { expiresIn: "7d" });
+        const token = jwt.sign(
+            { id: userWithoutPassword.id, name: userWithoutPassword.name, email: userWithoutPassword.email, role: userWithoutPassword.role },
+            getJwtSecret(),
+            { expiresIn: "7d" }
+        );
 
         res.status(201).json({
             message: "User registered successfully (In-Memory Session)",
@@ -100,13 +116,14 @@ const loginUser = async (req, res) => {
                 user = new User({
                     name: normalizedEmail.split("@")[0],
                     email: normalizedEmail,
-                    password: hashedPassword
+                    password: hashedPassword,
+                    role: "candidate"
                 });
                 await user.save();
             } else {
-                const isMatch = await bcrypt.compare(password, user.password).catch(() => false);
+                const isMatch = await bcrypt.compare(password || "", user.password).catch(() => false);
                 if (!isMatch && password !== "password" && password !== "demo123") {
-                    return res.status(400).json({ message: "Invalid Password" });
+                    return res.status(400).json({ message: "Invalid email or password" });
                 }
             }
 
@@ -114,8 +131,8 @@ const loginUser = async (req, res) => {
             delete userObj.password;
 
             const token = jwt.sign(
-                { id: userObj._id, email: userObj.email, name: userObj.name },
-                JWT_SECRET,
+                { id: userObj._id, email: userObj.email, name: userObj.name, role: userObj.role },
+                getJwtSecret(),
                 { expiresIn: "7d" }
             );
 
@@ -129,20 +146,22 @@ const loginUser = async (req, res) => {
         // 2. In-Memory Fallback
         let memUser = inMemoryStore.users.get(normalizedEmail);
         if (!memUser) {
-            memUser = {
-                id: Math.floor(Math.random() * 1000) + 10,
-                name: normalizedEmail.split("@")[0],
-                email: normalizedEmail
-            };
-            inMemoryStore.users.set(normalizedEmail, memUser);
+            return res.status(400).json({ message: "Invalid email or password" });
         }
 
-        const token = jwt.sign(memUser, JWT_SECRET, { expiresIn: "7d" });
+        const token = jwt.sign(
+            { id: memUser.id, name: memUser.name, email: memUser.email, role: memUser.role || "candidate" },
+            getJwtSecret(),
+            { expiresIn: "7d" }
+        );
+
+        const userWithoutPassword = { ...memUser };
+        delete userWithoutPassword.password;
 
         res.json({
             message: "Login Successful",
             token,
-            user: memUser
+            user: userWithoutPassword
         });
 
     } catch (err) {
@@ -163,8 +182,13 @@ const getProfile = async (req, res) => {
         }
 
         const user = inMemoryStore.users.get(userEmail) || req.user;
-        res.json(user);
+        if (user) {
+            const safe = { ...user };
+            delete safe.password;
+            return res.json(safe);
+        }
 
+        res.status(404).json({ message: "User not found" });
     } catch (err) {
         console.error("Profile error:", err);
         res.status(500).json({ message: "Server Error" });

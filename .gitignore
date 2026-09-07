@@ -9,6 +9,9 @@ frontend/node_modules/
 backend/.env
 backend/.env.local
 
+# Build artifacts
+frontend/dist/
+
 # Logs
 *.log
 npm-debug.log*
@@ -16,3 +19,7 @@ npm-debug.log*
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Temporary agent buffers
+.freebuff/
+**/.freebuff/

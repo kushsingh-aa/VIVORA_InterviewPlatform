@@ -50,8 +50,20 @@ export function InterviewProvider({ children }) {
   });
 
   const lastStartTimeRef = useRef(Date.now());
+  const telemetryIntervalRef = useRef(null);
 
   const { speak, cancel: cancelSpeech, isSpeaking, voiceEnabled, toggleVoice, speechRate, setSpeechRate } = useSpeechSynthesis();
+
+  // Send telemetry to backend for behavior analysis
+  const sendTelemetryToBackend = useCallback(async (telemetryData) => {
+    if (!activeSession?.sessionId) return;
+    try {
+      await api.post('/interview/telemetry', {
+        sessionId: activeSession.sessionId,
+        telemetryData
+      });
+    } catch {}
+  }, [activeSession?.sessionId]);
 
   // Load past history sessions
   const loadHistory = useCallback(async () => {
@@ -120,6 +132,9 @@ export function InterviewProvider({ children }) {
       if (initialHistory.length > 0) {
         speak(initialHistory[0].text);
       }
+
+      // Start periodic telemetry sync to backend
+      if (telemetryIntervalRef.current) clearInterval(telemetryIntervalRef.current);
 
       return { success: true };
     } catch (err) {
@@ -288,9 +303,22 @@ export function InterviewProvider({ children }) {
     }
   };
 
+  // End session - stop telemetry sync
+  useEffect(() => {
+    return () => {
+      if (telemetryIntervalRef.current) clearInterval(telemetryIntervalRef.current);
+    }
+  }, []);
+
+  // Expose telemetry sending for TelemetryHUD
+  const reportTelemetry = useCallback((data) => {
+    sendTelemetryToBackend(data);
+  }, [sendTelemetryToBackend]);
+
   // End chamber immediately
   const endSession = async () => {
     cancelSpeech();
+    if (telemetryIntervalRef.current) clearInterval(telemetryIntervalRef.current);
 
     if (activeSession) {
       const sessId = activeSession.sessionId;
@@ -352,7 +380,8 @@ export function InterviewProvider({ children }) {
       sendCopilotMessage,
       endSession,
       repeatVoice,
-      loadHistory
+      loadHistory,
+      reportTelemetry
     }}>
       {children}
     </InterviewContext.Provider>

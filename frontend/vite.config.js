@@ -8,6 +8,9 @@ export default defineConfig({
     proxy: {
       '/auth': 'http://localhost:5000',
       '/interview': 'http://localhost:5000',
+      '/skill': 'http://localhost:5000',
+      '/opportunity': 'http://localhost:5000',
+      '/analytics': 'http://localhost:5000',
       '/api': 'http://localhost:5000'
     }
   },
