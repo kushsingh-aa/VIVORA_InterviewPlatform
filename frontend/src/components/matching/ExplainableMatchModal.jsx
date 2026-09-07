@@ -62,7 +62,7 @@ export default function ExplainableMatchModal({ opportunity, isOpen, onClose }) 
                   Explainable AI Matching Engine
                 </span>
               </div>
-              <h2 className="text-lg font-bold text-white mt-1">{opportunity.title}</h2>
+              <h2 className="text-lg font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{opportunity.title}</h2>
               <p className="text-xs text-slate-400">{opportunity.company} · {opportunity.location || 'Remote'}</p>
             </div>
           </div>
@@ -129,7 +129,7 @@ export default function ExplainableMatchModal({ opportunity, isOpen, onClose }) 
                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
                   <div className="flex justify-between items-center mb-1 text-xs">
                     <span className="text-[11px] text-slate-400 truncate">{item.label}</span>
-                    <span className="font-bold text-white">{item.val}%</span>
+                    <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{item.val}%</span>
                   </div>
                   <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-muted)' }}>
                     <div style={{ width: `${item.val}%`, height: '100%', background: item.color }} />
@@ -159,7 +159,7 @@ export default function ExplainableMatchModal({ opportunity, isOpen, onClose }) 
                         <Icon size={14} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold text-white truncate">{sk.skillName}</p>
+                        <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{sk.skillName}</p>
                         <p className="text-[10px] text-slate-400">
                           Your Level: <span className="font-semibold text-slate-200">{sk.candidateLevel || 0}%</span> · Required: <span className="text-slate-300">{sk.required}%</span>
                         </p>
@@ -190,7 +190,7 @@ export default function ExplainableMatchModal({ opportunity, isOpen, onClose }) 
                   AI Upskilling Projection: Boost Match to {matchResult.estimatedImprovedScore}%
                 </p>
                 <p className="text-xs text-slate-300 mt-1">
-                  If you improve <span className="font-semibold text-white">{(matchResult.topImprovements || ['Spring Boot']).join(' & ')}</span> via Vivora's learning modules, your compatibility score for this position will jump from <span className="font-semibold text-white">{score}%</span> to <span className="font-semibold text-emerald-400">{matchResult.estimatedImprovedScore}%</span>.
+                  If you improve <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{(matchResult.topImprovements || ['Spring Boot']).join(' & ')}</span> via Vivora's learning modules, your compatibility score for this position will jump from <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{score}%</span> to <span className="font-semibold text-emerald-400">{matchResult.estimatedImprovedScore}%</span>.
                 </p>
               </div>
             </div>

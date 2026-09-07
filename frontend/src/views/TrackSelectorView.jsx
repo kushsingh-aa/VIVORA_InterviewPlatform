@@ -104,7 +104,7 @@ export default function TrackSelectorView({ onSelectTrack, onCancel }) {
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-base)' }}>
       {/* Top bar */}
       <div className="w-full px-6 py-4 flex items-center justify-between border-b"
-        style={{ borderColor: 'var(--border-subtle)', background: 'hsla(222,47%,7%,0.92)', backdropFilter: 'blur(20px)' }}>
+        style={{ borderColor: 'var(--border-subtle)', background: 'var(--nav-bg)', backdropFilter: 'blur(20px)' }}>
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
             style={{ background: 'linear-gradient(135deg, var(--v-indigo-deep), var(--v-violet))' }}>V</div>

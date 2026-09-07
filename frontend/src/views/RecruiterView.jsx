@@ -179,7 +179,7 @@ export default function RecruiterView() {
         <form onSubmit={handlePost} className="p-6 rounded-2xl space-y-4 animate-fade-up"
           style={{ background: 'var(--bg-surface)', border: '1px solid hsla(239,84%,67%,0.3)' }}>
           <div className="flex items-center justify-between">
-            <h2 className="font-bold text-base text-white">Create New Opportunity</h2>
+            <h2 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Create New Opportunity</h2>
             <span className="text-xs text-slate-400">SIH Industry Posting</span>
           </div>
 
@@ -265,7 +265,7 @@ export default function RecruiterView() {
       ) : listings.length === 0 ? (
         <div className="py-16 text-center rounded-2xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
           <Building2 size={36} className="mx-auto mb-3" style={{ color: 'var(--text-dim)' }} />
-          <p className="font-semibold text-white">No active listings</p>
+          <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>No active listings</p>
           <p className="text-sm mt-1 text-slate-400">Click "Post Opportunity" to publish your first role.</p>
         </div>
       ) : (
@@ -277,7 +277,7 @@ export default function RecruiterView() {
               <div className="p-5 flex items-center justify-between gap-4 flex-wrap">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-base text-white">{listing.title}</h3>
+                    <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>{listing.title}</h3>
                     <span className="badge badge-indigo text-[10px] uppercase">
                       {listing.type?.replace('_', ' ')}
                     </span>
@@ -334,7 +334,7 @@ export default function RecruiterView() {
                               {(app.candidateName || app.userEmail)?.[0]?.toUpperCase()}
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-white">{app.candidateName || app.userEmail.split('@')[0]}</p>
+                              <p className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{app.candidateName || app.userEmail.split('@')[0]}</p>
                               <p className="text-[10px] text-slate-400">
                                 {app.candidateProfile?.institution || 'NIT Karnataka'} · Readiness: {app.candidateProfile?.overallReadiness || 85}%
                               </p>
@@ -385,7 +385,7 @@ export default function RecruiterView() {
                   <Bot size={18} />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-white">AI Candidate Shortlisting</h2>
+                  <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>AI Candidate Shortlisting</h2>
                   <p className="text-xs text-slate-400">Ranked selection rationale for <span className="font-semibold text-slate-200">{shortlistTitle}</span></p>
                 </div>
               </div>
@@ -414,7 +414,7 @@ export default function RecruiterView() {
                           #{idx + 1}
                         </span>
                         <div>
-                          <h4 className="text-sm font-bold text-white">{cand.candidateName}</h4>
+                          <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{cand.candidateName}</h4>
                           <p className="text-xs text-slate-400">{cand.candidateProfile?.institution || 'NIT Karnataka'} · {cand.candidateProfile?.branch || 'Computer Science'}</p>
                         </div>
                       </div>

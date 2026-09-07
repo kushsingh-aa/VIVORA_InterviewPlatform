@@ -228,7 +228,7 @@ export default function DashboardView({ onStartInterview, onOpenCopilot, setCurr
                   </span>
                   {hasPassport && <span className="text-xs font-bold text-emerald-400">{readiness}% Ready</span>}
                 </div>
-                <h3 className="font-bold text-base text-white">AI-Verified Competencies</h3>
+                <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>AI-Verified Competencies</h3>
                 {hasPassport ? (
                   <>
                     <p className="text-xs text-slate-400 mt-1">
@@ -264,7 +264,7 @@ export default function DashboardView({ onStartInterview, onOpenCopilot, setCurr
                     Skill Gap Analysis
                   </span>
                 </div>
-                <h3 className="font-bold text-base text-white">Role Readiness</h3>
+                <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Role Readiness</h3>
                 {hasPassport ? (
                   <p className="text-xs text-slate-400 mt-1">
                     Analyze gaps between your verified skills and your target roles.
@@ -290,7 +290,7 @@ export default function DashboardView({ onStartInterview, onOpenCopilot, setCurr
                     Opportunities
                   </span>
                 </div>
-                <h3 className="font-bold text-base text-white">Matched Opportunities</h3>
+                <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Matched Opportunities</h3>
                 <p className="text-xs text-slate-500 mt-2 italic">
                   {hasPassport
                     ? 'Browse jobs matched to your verified skill profile.'
@@ -333,7 +333,7 @@ export default function DashboardView({ onStartInterview, onOpenCopilot, setCurr
                 {selectedDifficulty} Level ({seniorityData.title.split(':')[0]})
               </span>
             </div>
-            <h2 className="text-lg font-bold text-white">
+            <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
               {activeSubtrack
                 ? `Active Track: ${activeSubtrack.replace(/^software_|^product_|^data_|^devops_|^sec_|^behavioral_/, '').replace(/_/g, ' ').toUpperCase()}`
                 : 'Ready for your next AI Technical Interview?'}

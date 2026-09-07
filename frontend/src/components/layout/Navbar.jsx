@@ -110,7 +110,7 @@ export default function Navbar({ currentView, setCurrentView, onOpenCopilot, onS
   };
 
   return (
-    <header className="sticky top-0 z-50" style={{ background: 'hsla(222,47%,7%,0.92)', borderBottom: '1px solid var(--border-subtle)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
+    <header className="sticky top-0 z-50 transition-colors" style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--border-subtle)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
 
         {/* Logo */}

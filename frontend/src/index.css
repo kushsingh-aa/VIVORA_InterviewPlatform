@@ -7,7 +7,50 @@
 /* ═══════════════════════════════════════
    VIVORA SIH26044 — Design System Tokens
    ═══════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   VIVORA SIH26044 — Design System Tokens
+   ═══════════════════════════════════════ */
+
+/* ── LIGHT THEME (Default when not .dark) ── */
 :root {
+  /* Brand */
+  --v-indigo:      hsl(239, 84%, 60%);
+  --v-indigo-deep: hsl(239, 84%, 50%);
+  --v-violet:      hsl(262, 83%, 58%);
+  --v-cyan:        hsl(187, 85%, 45%);
+  --v-emerald:     hsl(160, 84%, 35%);
+  --v-amber:       hsl(38, 92%, 46%);
+  --v-rose:        hsl(348, 83%, 52%);
+
+  /* Light surface layers */
+  --bg-base:       hsl(220, 25%, 97%);
+  --bg-surface:    hsl(0, 0%, 100%);
+  --bg-elevated:   hsl(220, 20%, 93%);
+  --bg-overlay:    hsl(220, 18%, 88%);
+  --bg-muted:      hsl(220, 15%, 82%);
+
+  /* Borders */
+  --border-subtle: hsl(220, 20%, 86%);
+  --border-base:   hsl(220, 20%, 76%);
+  --border-accent: hsl(239, 70%, 65%);
+
+  /* Text */
+  --text-primary:  hsl(222, 47%, 12%);
+  --text-secondary: hsl(222, 25%, 32%);
+  --text-muted:    hsl(220, 15%, 46%);
+  --text-dim:      hsl(220, 10%, 60%);
+
+  /* Glass & Header */
+  --glass-bg:      hsla(0, 0%, 100%, 0.88);
+  --glass-border:  hsla(239, 50%, 65%, 0.2);
+  --glass-blur:    blur(16px);
+  --nav-bg:        hsla(0, 0%, 100%, 0.94);
+  --shadow-card:   0 4px 20px -2px hsla(220, 25%, 20%, 0.07);
+}
+
+/* ── DARK THEME (When .dark class is on html) ── */
+html.dark,
+.dark {
   /* Brand */
   --v-indigo:      hsl(239, 84%, 67%);
   --v-indigo-deep: hsl(239, 84%, 55%);
@@ -35,10 +78,12 @@
   --text-muted:    hsl(215, 20%, 50%);
   --text-dim:      hsl(215, 15%, 36%);
 
-  /* Glass */
+  /* Glass & Header */
   --glass-bg:      hsla(222, 44%, 10%, 0.75);
   --glass-border:  hsla(239, 50%, 65%, 0.15);
   --glass-blur:    blur(16px);
+  --nav-bg:        hsla(222, 47%, 7%, 0.92);
+  --shadow-card:   0 8px 32px hsla(222, 47%, 4%, 0.4);
 }
 
 /* ── Base ── */
@@ -52,9 +97,19 @@
     background-color: var(--bg-base);
     color: var(--text-primary);
     @apply antialiased min-h-screen;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  html.dark body {
     background-image:
       radial-gradient(ellipse 80% 60% at 50% -20%, hsla(239, 80%, 30%, 0.22) 0%, transparent 60%),
       radial-gradient(ellipse 40% 40% at 90% 80%, hsla(262, 80%, 25%, 0.12) 0%, transparent 60%);
+  }
+
+  html:not(.dark) body {
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -20%, hsla(239, 80%, 85%, 0.35) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 90% 80%, hsla(262, 80%, 88%, 0.2) 0%, transparent 60%);
   }
 
   code, pre, kbd, .font-mono {

@@ -200,7 +200,7 @@ export default function ScorecardView({ onBackToDashboard, onNavigateTo, onSwitc
                 <div key={sk.name || sk.skillName} className="p-3.5 rounded-xl flex flex-col justify-between"
                   style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-semibold text-white">{sk.name || sk.skillName}</span>
+                    <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{sk.name || sk.skillName}</span>
                     <span className="text-xs font-bold" style={{ color: (sk.score || sk.proficiency || 0) >= 80 ? 'hsl(160,84%,50%)' : 'var(--v-indigo)' }}>
                       {sk.score || sk.proficiency || 0}%
                     </span>
