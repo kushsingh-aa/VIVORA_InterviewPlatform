@@ -85,7 +85,7 @@ class ErrorBoundary extends React.Component {
 
 export default function App() {
   const { isAuthenticated, isLoading, user } = useAuth();
-  const { setFinalReport } = useInterview();
+  const { setFinalReport, resetSession } = useInterview();
   const [currentView, setCurrentViewState] = useState(getViewFromUrlOrStorage);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [preSelectedTrack, setPreSelectedTrack] = useState(
@@ -131,6 +131,7 @@ export default function App() {
   );
 
   const handleTrackSelect = (trackId) => {
+    if (resetSession) resetSession();
     setPreSelectedTrack(trackId);
     sessionStorage.setItem('vivora_selected_subtrack', trackId);
     sessionStorage.setItem('vivora_track_selected', 'true');
@@ -185,7 +186,10 @@ export default function App() {
     );
   }
 
-  const handleStartInterview = () => setCurrentView('interview');
+  const handleStartInterview = () => {
+    if (resetSession) resetSession();
+    setCurrentView('interview');
+  };
 
   const handleInterviewConcluded = (report) => {
     if (report) setFinalReport(report);
@@ -235,7 +239,10 @@ export default function App() {
         {currentView === 'complete'     && (
           <ScorecardView
             onBackToDashboard={() => setCurrentView('dashboard')}
-            onNavigateTo={(view) => setCurrentView(view)}
+            onNavigateTo={(view) => {
+              if (view === 'interview' && resetSession) resetSession();
+              setCurrentView(view);
+            }}
             onSwitchDomain={role === 'candidate' ? handleSwitchDomain : undefined}
           />
         )}

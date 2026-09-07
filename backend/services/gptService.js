@@ -192,6 +192,97 @@ const PERSONAS = {
     }
 };
 
+// Dynamic Multi-Track Question Bank for fresh assessment sessions
+const QUESTION_BANK = {
+    software: {
+        Junior: [
+            { topic: "API Design & Input Validation", question: "How would you design a secure user registration API that validates email format, sanitizes inputs, and safely hashes passwords in PostgreSQL?" },
+            { topic: "Data Structures & Complexity", question: "Given an unsorted array of integers, how would you find two numbers that sum to a target value in O(n) time and O(n) space?" },
+            { topic: "Error Handling in Node.js", question: "How would you structure error handling in an Express middleware pipeline so asynchronous errors never crash the Node process?" },
+            { topic: "Unit Testing & Mocking", question: "How do you write a unit test with Jest to test a function calling a third-party API that might timeout or return 500?" },
+            { topic: "Database Queries & Joins", question: "Given Users and Orders tables, write a query to fetch the top 5 users by total order value, including users with zero orders." }
+        ],
+        "Mid-Level": [
+            { topic: "Database Indexing & Caching", question: "Your product search query takes 1.5 seconds under 2,000 QPS. How do you index your relational DB and configure Redis cache-aside?" },
+            { topic: "Webhook Idempotency", question: "How would you design an idempotent webhook listener for Stripe payments that prevents duplicate order fulfillment on network retries?" },
+            { topic: "Asynchronous Queue Workers", question: "How would you implement a background worker queue with BullMQ and Redis supporting exponential backoff retries and dead-letter queues?" },
+            { topic: "Zero-Downtime DB Migration", question: "How do you safely add a NOT NULL column with a default value to a 20-million-row Postgres table without locking write traffic?" },
+            { topic: "API Rate Limiting", question: "How would you implement a sliding-window rate limiter middleware for your REST API to prevent abuse from specific API keys?" }
+        ],
+        Senior: [
+            { topic: "Idempotency & Concurrency", question: "How do you guarantee idempotency and avoid double-charges in a payment service during a 10x flash sale spike with network timeouts?" },
+            { topic: "Cache Stampede Mitigation", question: "How do you prevent cache stampedes and thundering herds in Redis when a high-traffic key expires under 100,000 QPS?" },
+            { topic: "Distributed Locking Mechanics", question: "How would you implement a distributed lock using Redis or Postgres advisory locks, and how do you handle lock expiration before job completion?" },
+            { topic: "Cascading Failure Isolation", question: "How would you isolate cascading microservice failures across 15 downstream services using circuit breakers, fallbacks, and bulkhead pools?" },
+            { topic: "Event-Driven Resilience", question: "Design an event-driven notification service across email, SMS, and push that guarantees at-least-once delivery without dropping alerts during provider outages." }
+        ],
+        "Staff/Lead": [
+            { topic: "Planetary Multi-Region Architecture", question: "How do you resolve cross-datacenter write conflicts in an active-active multi-region transaction ledger with under 50ms p99 latency?" },
+            { topic: "Monolith to Microservices Sharding", question: "How would you architect a zero-downtime migration of a 50TB monolithic database to a distributed sharded architecture with continuous bidirectional sync?" },
+            { topic: "Global Multi-Tenant Fairness", question: "How do you design a global multi-tenant rate limiting and fairness engine that scales to 5 million QPS across 4 cloud regions without latency overhead?" },
+            { topic: "Event Sourcing & CQRS", question: "How would you architect an event sourcing and CQRS platform for financial balance calculation with strict consistency and instant auditability?" },
+            { topic: "Consensus & Partition Tolerance", question: "When designing a distributed key-value storage engine, how do you handle Raft or Paxos leader election partitions and split-brain scenarios?" }
+        ]
+    },
+    system_design: {
+        Junior: [
+            { topic: "URL Shortener Service", question: "How would you design a basic URL shortener like Bitly, including URL hashing, database schema, and redirection?" },
+            { topic: "Reverse Proxy & Load Balancing", question: "How does a reverse proxy like NGINX distribute incoming HTTP requests across three stateless backend servers?" },
+            { topic: "Presigned File Storage", question: "How would you design a photo upload service that stores metadata in SQL and raw files in S3 using presigned URLs?" }
+        ],
+        "Mid-Level": [
+            { topic: "Asynchronous Media Processing", question: "Design an auto-scaling image pipeline where uploaded images are resized into multiple resolutions asynchronously using SQS and worker instances." },
+            { topic: "Real-Time Collaborative Editing", question: "How would you design a real-time collaborative document editing backend using WebSockets and conflict-free replicated data types (CRDTs)?" },
+            { topic: "Distributed Session Store", question: "How would you design a distributed session store that maintains user login states across multiple stateless microservices with sub-5ms latency?" }
+        ],
+        Senior: [
+            { topic: "Global CDN Cache Purge", question: "Design a global CDN cache invalidation system that propagates URL purge requests worldwide in under 500ms." },
+            { topic: "Geospatial Ride Dispatching", question: "Design a ride-sharing dispatch service like Uber matching riders and drivers in real time based on geospatial indexing (H3 or S2 cells)." },
+            { topic: "Distributed Search Indexing", question: "Design a distributed search and indexing engine capable of ingesting 100,000 documents per second with sub-second query latency." }
+        ],
+        "Staff/Lead": [
+            { topic: "Planetary Video Streaming", question: "Design a planetary-scale video streaming architecture like YouTube supporting live streaming to 10 million concurrent viewers with sub-second latency." },
+            { topic: "Zero-Trust Edge Proxy", question: "Architect a zero-trust enterprise edge proxy network inspecting and routing 100Gbps of encrypted ingress traffic across multi-cloud clusters." }
+        ]
+    },
+    product: {
+        Junior: [
+            { topic: "MVP Scope & Metrics", question: "How would you define the MVP for an AI-powered code review feature, and which metrics would determine initial product-market fit?" },
+            { topic: "Funnel Drop-off Analysis", question: "Candidate onboarding drop-off spiked by 15% after the latest release. How would you investigate and identify the root cause?" }
+        ],
+        "Mid-Level": [
+            { topic: "Freemium Conversion & A/B Testing", question: "How would you design an A/B test framework to validate a new freemium pricing tier without cannibalizing enterprise sales?" },
+            { topic: "Feature Retention Measurement", question: "Your team wants to introduce an AI assistant into a developer IDE. How do you measure retention and distinguish genuine utility from novel curiosity?" }
+        ],
+        Senior: [
+            { topic: "Consumption-Based Pricing Transition", question: "How would you design the pricing and packaging strategy for a SaaS platform transitioning from seat-based pricing to consumption-based billing?" },
+            { topic: "Enterprise Customization vs Platform Roadmap", question: "A tier-one enterprise customer threatens to churn unless you build a bespoke feature that conflicts with your product vision. How do you handle this?" }
+        ],
+        "Staff/Lead": [
+            { topic: "3-Year Strategic Vision", question: "How do you formulate a 3-year strategic product vision for an enterprise platform facing aggressive commoditization from open-source alternatives?" },
+            { topic: "Legacy Product Sunsetting", question: "How do you align executive leadership, engineering, and sales when sunsetting a legacy product that still generates 20% of company revenue?" }
+        ]
+    },
+    behavioral: {
+        Junior: [
+            { topic: "Production Mistake & Learning", question: "Tell me about a time you made a mistake in production or broke a build. How did you handle the situation and what did you learn?" },
+            { topic: "Rapid Technology Onboarding", question: "Describe a scenario where you had to learn a completely unfamiliar programming language or framework under a tight project deadline." }
+        ],
+        "Mid-Level": [
+            { topic: "Technical Architecture Disagreement", question: "Describe a time you strongly disagreed with a senior engineer or team lead on technical architecture. How did you resolve the disagreement?" },
+            { topic: "Mid-Sprint Scope Shift", question: "Tell me about a project where requirements changed dramatically midway through execution. How did you adapt and keep the team on track?" }
+        ],
+        Senior: [
+            { topic: "Cross-Team Priority Alignment", question: "Tell me about a complex cross-team initiative you led where the partner team had competing priorities and resisted your timeline. How did you align them?" },
+            { topic: "Major Outage & Incident Leadership", question: "Describe the biggest technical failure or outage of your career. What was the blast radius, how did you lead incident response, and what post-mortem changes did you drive?" }
+        ],
+        "Staff/Lead": [
+            { topic: "Cross-Org Influence Without Authority", question: "Describe a time you influenced an organization-wide architectural shift across multiple engineering divisions without direct managerial authority." },
+            { topic: "High-Stakes Technical Bet", question: "Tell me about a high-stakes technical bet you championed that faced strong executive skepticism. How did you validate it and what was the outcome?" }
+        ]
+    }
+};
+
 const gptService = {
     /**
      * Initializes interview session and generates dynamic opening question calibrated to Seniority level
@@ -200,56 +291,46 @@ const gptService = {
         const personaInfo = PERSONAS[track] || PERSONAS.software;
         const archetype = SENIORITY_ARCHETYPES[difficulty] || SENIORITY_ARCHETYPES.Senior;
 
+        // Select a randomized seed scenario from QUESTION_BANK for fresh topic variety
+        const trackPool = QUESTION_BANK[track] || QUESTION_BANK.software;
+        const difficultyPool = trackPool[difficulty] || trackPool.Senior || QUESTION_BANK.software.Senior;
+        const randomSeedIndex = Math.floor(Math.random() * difficultyPool.length);
+        const seedScenario = difficultyPool[randomSeedIndex];
+
         const systemPrompt = `You are ${personaInfo.persona}, an elite interviewer conducting a live ${archetype.title} interview for a ${personaInfo.roleTitle} candidate.
 
 TARGET SENIORITY LEVEL: "${difficulty}" (${archetype.title})
 SENIORITY SCOPE: ${archetype.scope}
 INTERVIEWER TONE: ${archetype.tone}
+INTERVIEW SCENARIO FOCUS: "${seedScenario.topic}"
 
 CRITICAL QUESTION CONSTRAINT:
-The opening question MUST be ULTRA SHORT, CRISP, AND DIRECT (1 to 2 sentences maximum, under 25 words). Never generate long paragraphs. Get straight to the technical problem.
+The opening question MUST be ULTRA SHORT, CRISP, AND DIRECT (1 to 2 sentences maximum, under 25 words). Never generate long paragraphs. Get straight to the technical problem. Challenge the candidate on a fresh, concrete scenario regarding "${seedScenario.topic}".
 
 Respond in JSON format:
 {
   "greeting": "Short 1-sentence greeting",
   "openingQuestion": "Ultra short 1-2 sentence scenario question under 25 words",
-  "topic": "Brief topic title"
+  "topic": "${seedScenario.topic}"
 }`;
 
         const messages = [
-            { role: "user", content: `Please initiate the interview session for ${candidateName} for the ${personaInfo.roleTitle} role at ${difficulty} level.` }
+            { role: "user", content: `Please initiate a brand new interview session for ${candidateName} for the ${personaInfo.roleTitle} role at ${difficulty} level. Focus the opening technical scenario on "${seedScenario.topic}" (variation key: ${Math.random().toString(36).substring(7)}).` }
         ];
 
         let generated = await callLLM({
             systemPrompt,
             messages,
-            temperature: 0.8,
+            temperature: 0.85,
             jsonMode: true,
             apiKeyOverride: apiKey
         });
 
         if (!generated || !generated.openingQuestion || generated.openingQuestion.length > 200) {
-            let fallbackQ = "";
-            let fallbackTopic = "";
-
-            if (difficulty === "Junior") {
-                fallbackTopic = "API Design & Input Validation";
-                fallbackQ = "How would you design a secure user registration API that validates input and safely hashes passwords in PostgreSQL?";
-            } else if (difficulty === "Mid-Level") {
-                fallbackTopic = "Database Indexing & Caching";
-                fallbackQ = "Your product query takes 1.5 seconds under 2,000 QPS. How do you index and cache it with Redis?";
-            } else if (difficulty === "Staff/Lead") {
-                fallbackTopic = "Planetary Multi-Region Architecture";
-                fallbackQ = "How do you resolve cross-datacenter write conflicts in an active-active multi-region transaction ledger?";
-            } else {
-                fallbackTopic = "Idempotency & Concurrency";
-                fallbackQ = "How do you guarantee idempotency and avoid double-charges in a payment service during a 10x flash sale?";
-            }
-
             generated = {
                 greeting: `${personaInfo.greeting} Evaluating at **${difficulty} Level**.`,
-                openingQuestion: fallbackQ,
-                topic: fallbackTopic
+                openingQuestion: seedScenario.question,
+                topic: seedScenario.topic
             };
         }
 

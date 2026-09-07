@@ -110,6 +110,8 @@ export function InterviewProvider({ children }) {
   // Start new interview session
   const startSession = async (track) => {
     cancelSpeech();
+    setActiveSession(null);
+    setHistory([]);
     setFinalReport(null);
     setIsAiThinking(true);
     setAiStatus('Initializing...');
@@ -244,7 +246,9 @@ export function InterviewProvider({ children }) {
 
       if (data.isComplete) {
         cancelSpeech();
-        setActiveSession(prev => ({ ...prev, status: 'completed' }));
+        if (telemetryIntervalRef.current) clearInterval(telemetryIntervalRef.current);
+        setActiveSession(null);
+        setHistory([]);
         setFinalReport(data.report);
         loadHistory();
         return { isComplete: true, report: data.report };
@@ -341,6 +345,25 @@ export function InterviewProvider({ children }) {
     sendTelemetryToBackend(data);
   }, [sendTelemetryToBackend]);
 
+  // Reset active session and conversation history completely for a fresh assessment
+  const resetSession = useCallback(() => {
+    cancelSpeech();
+    if (telemetryIntervalRef.current) clearInterval(telemetryIntervalRef.current);
+    setActiveSession(null);
+    setHistory([]);
+    setIsAiThinking(false);
+    setAiStatus('Ready');
+    setLiveEvaluation({
+      clarityScore: null,
+      technicalDepth: 0,
+      problemSolving: 0,
+      wpm: 0,
+      accuracyStatus: 'Ready for Assessment',
+      latestHighlights: [],
+      latestCritiques: []
+    });
+  }, [cancelSpeech]);
+
   // End chamber immediately
   const endSession = async () => {
     cancelSpeech();
@@ -349,6 +372,7 @@ export function InterviewProvider({ children }) {
     if (activeSession) {
       const sessId = activeSession.sessionId;
       setActiveSession(null); // Clear active session immediately so chamber closes
+      setHistory([]);
 
       try {
         const res = await api.post('/interview/complete', { sessionId: sessId });
@@ -367,6 +391,7 @@ export function InterviewProvider({ children }) {
           executiveSummary: 'Assessment chamber was concluded early.'
         };
         setFinalReport(fallbackReport);
+        loadHistory();
         return fallbackReport;
       }
     }
@@ -401,6 +426,7 @@ export function InterviewProvider({ children }) {
       setSpeechRate,
       cancelSpeech,
       startSession,
+      resetSession,
       submitAnswer,
       requestHint,
       sendCopilotMessage,

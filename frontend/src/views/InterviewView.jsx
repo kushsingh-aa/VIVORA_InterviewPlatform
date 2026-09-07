@@ -126,8 +126,8 @@ export default function InterviewView({ onConclude, preSelectedTrack, onSwitchDo
     );
   }
 
-  // 2. Chamber Launcher if no session is active yet
-  if (!activeSession) {
+  // 2. Chamber Launcher if no session is active or previous session completed
+  if (!activeSession || activeSession.status === 'completed') {
     return (
       <div className="max-w-3xl mx-auto space-y-6 animate-fade-up py-4">
         <div className="card p-8 text-center space-y-3" style={{ background: 'var(--bg-surface)' }}>

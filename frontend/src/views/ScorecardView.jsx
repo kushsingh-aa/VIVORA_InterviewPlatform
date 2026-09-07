@@ -40,7 +40,16 @@ function MetricBar({ label, score, color }) {
 }
 
 export default function ScorecardView({ onBackToDashboard, onNavigateTo, onSwitchDomain }) {
-  const { finalReport, activeSession, historyArchive } = useInterview();
+  const { finalReport, activeSession, historyArchive, resetSession } = useInterview();
+
+  const handleStartNewInterview = () => {
+    if (resetSession) resetSession();
+    if (onNavigateTo) {
+      onNavigateTo('interview');
+    } else {
+      onBackToDashboard();
+    }
+  };
 
   const savedReport = (() => {
     try {
@@ -152,6 +161,22 @@ export default function ScorecardView({ onBackToDashboard, onNavigateTo, onSwitc
           <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
             {report.executiveSummary}
           </p>
+          <div className="flex items-center gap-2 pt-2">
+            <button
+              onClick={handleStartNewInterview}
+              className="btn-primary text-xs flex items-center gap-1.5 px-4 py-2 shadow-md hover-lift font-semibold">
+              <Sparkles size={13} />
+              <span>Start New Assessment</span>
+            </button>
+            {onSwitchDomain && (
+              <button
+                onClick={onSwitchDomain}
+                className="btn-ghost text-xs flex items-center gap-1.5 px-3 py-2">
+                <Compass size={13} />
+                <span>Switch Domain</span>
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col items-center gap-2">
@@ -426,7 +451,7 @@ export default function ScorecardView({ onBackToDashboard, onNavigateTo, onSwitc
           className="btn-ghost flex items-center gap-2">
           <ArrowLeft size={14} /> Back to Dashboard
         </button>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
           {onSwitchDomain && (
             <button
               onClick={onSwitchDomain}
@@ -441,8 +466,12 @@ export default function ScorecardView({ onBackToDashboard, onNavigateTo, onSwitc
             </button>
           )}
           <button onClick={handleExportTxt}
-            className="btn-primary flex items-center gap-2">
+            className="btn-ghost flex items-center gap-2 text-xs">
             <Download size={14} /> Export Scorecard
+          </button>
+          <button onClick={handleStartNewInterview}
+            className="btn-primary flex items-center gap-2 text-xs font-semibold px-4 py-2.5 shadow-md hover-lift">
+            <Sparkles size={14} /> Start New Assessment
           </button>
         </div>
       </div>
