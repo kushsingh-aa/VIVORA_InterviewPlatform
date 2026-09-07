@@ -35,7 +35,24 @@ export function InterviewProvider({ children }) {
       text: '🤖 **Vivora Copilot Online:** I can provide structural frameworks (STAR, Tradeoff Matrix), hints, or technical advice during your interview.'
     }
   ]);
-  const [finalReport, setFinalReport] = useState(null);
+  const [finalReport, setFinalReportState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('vivora_last_report');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const setFinalReport = useCallback((rep) => {
+    setFinalReportState(rep);
+    if (rep && (rep.overallScore > 0 || rep.roleTitle)) {
+      try {
+        localStorage.setItem('vivora_last_report', JSON.stringify(rep));
+      } catch {}
+    }
+  }, []);
+
   const [historyArchive, setHistoryArchive] = useState([]);
 
   // Dynamic Live Metrics evaluated from candidate answers
@@ -71,6 +88,15 @@ export function InterviewProvider({ children }) {
       const res = await api.get('/interview/history');
       if (res.data?.history) {
         setHistoryArchive(res.data.history);
+        setFinalReportState(prev => {
+          if (prev && prev.overallScore > 0) return prev;
+          const latest = res.data.history.find(h => h.report && h.report.overallScore > 0) || res.data.history[0];
+          if (latest?.report) {
+            try { localStorage.setItem('vivora_last_report', JSON.stringify(latest.report)); } catch {}
+            return latest.report;
+          }
+          return prev;
+        });
       }
     } catch (err) {
       console.warn('Could not load history archive:', err.message);

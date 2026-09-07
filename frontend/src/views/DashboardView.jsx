@@ -143,6 +143,15 @@ export default function DashboardView({ onStartInterview, onOpenCopilot, setCurr
               Career Copilot
             </button>
           )}
+          {historyArchive.length > 0 && (
+            <button onClick={() => nav('complete')}
+              className="btn-ghost text-xs flex items-center gap-1.5 hover-lift"
+              style={{ padding: '8px 14px' }}
+              title="Open your latest interview evaluation scorecard">
+              <Award size={14} style={{ color: 'var(--v-indigo)' }} />
+              <span>Latest Scorecard</span>
+            </button>
+          )}
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
             style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
             <BarChart3 size={14} style={{ color: 'var(--v-indigo)' }} />
@@ -383,6 +392,22 @@ export default function DashboardView({ onStartInterview, onOpenCopilot, setCurr
                 title="Open domain & sub-track selector panel">
                 <Compass size={15} className="text-indigo-400" />
                 <span>Change Domain Panel</span>
+              </button>
+            )}
+
+            {historyArchive.length > 0 && (
+              <button
+                type="button"
+                onClick={() => nav('complete')}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all hover-lift"
+                style={{
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border-subtle)',
+                  color: 'var(--text-primary)'
+                }}
+                title="View your latest interview evaluation and scorecard">
+                <Award size={15} style={{ color: 'var(--v-indigo)' }} />
+                <span>View Scorecard</span>
               </button>
             )}
 

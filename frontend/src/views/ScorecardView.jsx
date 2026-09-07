@@ -42,12 +42,21 @@ function MetricBar({ label, score, color }) {
 export default function ScorecardView({ onBackToDashboard, onNavigateTo, onSwitchDomain }) {
   const { finalReport, activeSession, historyArchive } = useInterview();
 
+  const savedReport = (() => {
+    try {
+      const s = localStorage.getItem('vivora_last_report');
+      return s ? JSON.parse(s) : null;
+    } catch { return null; }
+  })();
+
   const latestHistorical = historyArchive?.[0]?.report;
   const effectiveReport = (finalReport && finalReport.overallScore > 0)
     ? finalReport
     : (latestHistorical && latestHistorical.overallScore > 0)
     ? latestHistorical
-    : (finalReport || latestHistorical);
+    : (savedReport && savedReport.overallScore > 0)
+    ? savedReport
+    : (finalReport || latestHistorical || savedReport);
 
   const report = effectiveReport || {
     roleTitle: activeSession?.roleTitle || 'Software Engineer',
